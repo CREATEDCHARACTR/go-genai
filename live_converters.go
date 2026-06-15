@@ -1029,44 +1029,9 @@ func sessionResumptionConfigToMldev(fromObject map[string]any, parentObject map[
 func usageMetadataFromVertex(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
 
-	fromPromptTokenCount := InternalGetValueByPath(fromObject, []string{"promptTokenCount"})
-	if fromPromptTokenCount != nil {
-		InternalSetValueByPath(toObject, []string{"promptTokenCount"}, fromPromptTokenCount)
-	}
-
-	fromCachedContentTokenCount := InternalGetValueByPath(fromObject, []string{"cachedContentTokenCount"})
-	if fromCachedContentTokenCount != nil {
-		InternalSetValueByPath(toObject, []string{"cachedContentTokenCount"}, fromCachedContentTokenCount)
-	}
-
 	fromResponseTokenCount := InternalGetValueByPath(fromObject, []string{"candidatesTokenCount"})
 	if fromResponseTokenCount != nil {
 		InternalSetValueByPath(toObject, []string{"responseTokenCount"}, fromResponseTokenCount)
-	}
-
-	fromToolUsePromptTokenCount := InternalGetValueByPath(fromObject, []string{"toolUsePromptTokenCount"})
-	if fromToolUsePromptTokenCount != nil {
-		InternalSetValueByPath(toObject, []string{"toolUsePromptTokenCount"}, fromToolUsePromptTokenCount)
-	}
-
-	fromThoughtsTokenCount := InternalGetValueByPath(fromObject, []string{"thoughtsTokenCount"})
-	if fromThoughtsTokenCount != nil {
-		InternalSetValueByPath(toObject, []string{"thoughtsTokenCount"}, fromThoughtsTokenCount)
-	}
-
-	fromTotalTokenCount := InternalGetValueByPath(fromObject, []string{"totalTokenCount"})
-	if fromTotalTokenCount != nil {
-		InternalSetValueByPath(toObject, []string{"totalTokenCount"}, fromTotalTokenCount)
-	}
-
-	fromPromptTokensDetails := InternalGetValueByPath(fromObject, []string{"promptTokensDetails"})
-	if fromPromptTokensDetails != nil {
-		InternalSetValueByPath(toObject, []string{"promptTokensDetails"}, fromPromptTokensDetails)
-	}
-
-	fromCacheTokensDetails := InternalGetValueByPath(fromObject, []string{"cacheTokensDetails"})
-	if fromCacheTokensDetails != nil {
-		InternalSetValueByPath(toObject, []string{"cacheTokensDetails"}, fromCacheTokensDetails)
 	}
 
 	fromResponseTokensDetails := InternalGetValueByPath(fromObject, []string{"candidatesTokensDetails"})
@@ -1074,9 +1039,44 @@ func usageMetadataFromVertex(fromObject map[string]any, parentObject map[string]
 		InternalSetValueByPath(toObject, []string{"responseTokensDetails"}, fromResponseTokensDetails)
 	}
 
+	fromCacheTokensDetails := InternalGetValueByPath(fromObject, []string{"cacheTokensDetails"})
+	if fromCacheTokensDetails != nil {
+		InternalSetValueByPath(toObject, []string{"cacheTokensDetails"}, fromCacheTokensDetails)
+	}
+
+	fromCachedContentTokenCount := InternalGetValueByPath(fromObject, []string{"cachedContentTokenCount"})
+	if fromCachedContentTokenCount != nil {
+		InternalSetValueByPath(toObject, []string{"cachedContentTokenCount"}, fromCachedContentTokenCount)
+	}
+
+	fromPromptTokenCount := InternalGetValueByPath(fromObject, []string{"promptTokenCount"})
+	if fromPromptTokenCount != nil {
+		InternalSetValueByPath(toObject, []string{"promptTokenCount"}, fromPromptTokenCount)
+	}
+
+	fromPromptTokensDetails := InternalGetValueByPath(fromObject, []string{"promptTokensDetails"})
+	if fromPromptTokensDetails != nil {
+		InternalSetValueByPath(toObject, []string{"promptTokensDetails"}, fromPromptTokensDetails)
+	}
+
+	fromThoughtsTokenCount := InternalGetValueByPath(fromObject, []string{"thoughtsTokenCount"})
+	if fromThoughtsTokenCount != nil {
+		InternalSetValueByPath(toObject, []string{"thoughtsTokenCount"}, fromThoughtsTokenCount)
+	}
+
+	fromToolUsePromptTokenCount := InternalGetValueByPath(fromObject, []string{"toolUsePromptTokenCount"})
+	if fromToolUsePromptTokenCount != nil {
+		InternalSetValueByPath(toObject, []string{"toolUsePromptTokenCount"}, fromToolUsePromptTokenCount)
+	}
+
 	fromToolUsePromptTokensDetails := InternalGetValueByPath(fromObject, []string{"toolUsePromptTokensDetails"})
 	if fromToolUsePromptTokensDetails != nil {
 		InternalSetValueByPath(toObject, []string{"toolUsePromptTokensDetails"}, fromToolUsePromptTokensDetails)
+	}
+
+	fromTotalTokenCount := InternalGetValueByPath(fromObject, []string{"totalTokenCount"})
+	if fromTotalTokenCount != nil {
+		InternalSetValueByPath(toObject, []string{"totalTokenCount"}, fromTotalTokenCount)
 	}
 
 	fromTrafficType := InternalGetValueByPath(fromObject, []string{"trafficType"})

@@ -101,6 +101,16 @@ func batchJobDestinationToVertex(fromObject map[string]any, parentObject map[str
 		InternalSetValueByPath(toObject, []string{"bigqueryDestination", "outputUri"}, fromBigqueryUri)
 	}
 
+	fromVertexDataset := InternalGetValueByPath(fromObject, []string{"vertexDataset"})
+	if fromVertexDataset != nil {
+		fromVertexDataset, err = vertexMultimodalDatasetDestinationToVertex(fromVertexDataset.(map[string]any), toObject, rootObject)
+		if err != nil {
+			return nil, err
+		}
+
+		InternalSetValueByPath(toObject, []string{"vertexMultimodalDatasetDestination"}, fromVertexDataset)
+	}
+
 	if InternalGetValueByPath(fromObject, []string{"fileName"}) != nil {
 		return nil, fmt.Errorf("fileName parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
 	}
@@ -111,16 +121,6 @@ func batchJobDestinationToVertex(fromObject map[string]any, parentObject map[str
 
 	if InternalGetValueByPath(fromObject, []string{"inlinedEmbedContentResponses"}) != nil {
 		return nil, fmt.Errorf("inlinedEmbedContentResponses parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
-	}
-
-	fromVertexDataset := InternalGetValueByPath(fromObject, []string{"vertexDataset"})
-	if fromVertexDataset != nil {
-		fromVertexDataset, err = vertexMultimodalDatasetDestinationToVertex(fromVertexDataset.(map[string]any), toObject, rootObject)
-		if err != nil {
-			return nil, err
-		}
-
-		InternalSetValueByPath(toObject, []string{"vertexMultimodalDatasetDestination"}, fromVertexDataset)
 	}
 
 	return toObject, nil
@@ -265,14 +265,14 @@ func batchJobFromVertex(fromObject map[string]any, parentObject map[string]any, 
 		InternalSetValueByPath(toObject, []string{"dest"}, fromDest)
 	}
 
-	fromCompletionStats := InternalGetValueByPath(fromObject, []string{"completionStats"})
-	if fromCompletionStats != nil {
-		InternalSetValueByPath(toObject, []string{"completionStats"}, fromCompletionStats)
-	}
-
 	fromOutputInfo := InternalGetValueByPath(fromObject, []string{"outputInfo"})
 	if fromOutputInfo != nil {
 		InternalSetValueByPath(toObject, []string{"outputInfo"}, fromOutputInfo)
+	}
+
+	fromCompletionStats := InternalGetValueByPath(fromObject, []string{"completionStats"})
+	if fromCompletionStats != nil {
+		InternalSetValueByPath(toObject, []string{"completionStats"}, fromCompletionStats)
 	}
 
 	return toObject, nil
@@ -318,6 +318,10 @@ func batchJobSourceToMldev(ac *InternalAPIClient, fromObject map[string]any, par
 		return nil, fmt.Errorf("bigqueryUri parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
+	if InternalGetValueByPath(fromObject, []string{"vertexDatasetName"}) != nil {
+		return nil, fmt.Errorf("vertexDatasetName parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
+	}
+
 	fromFileName := InternalGetValueByPath(fromObject, []string{"fileName"})
 	if fromFileName != nil {
 		InternalSetValueByPath(toObject, []string{"fileName"}, fromFileName)
@@ -331,10 +335,6 @@ func batchJobSourceToMldev(ac *InternalAPIClient, fromObject map[string]any, par
 		}
 
 		InternalSetValueByPath(toObject, []string{"requests", "requests"}, fromInlinedRequests)
-	}
-
-	if InternalGetValueByPath(fromObject, []string{"vertexDatasetName"}) != nil {
-		return nil, fmt.Errorf("vertexDatasetName parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
 	return toObject, nil
@@ -358,17 +358,17 @@ func batchJobSourceToVertex(fromObject map[string]any, parentObject map[string]a
 		InternalSetValueByPath(toObject, []string{"bigquerySource", "inputUri"}, fromBigqueryUri)
 	}
 
+	fromVertexDatasetName := InternalGetValueByPath(fromObject, []string{"vertexDatasetName"})
+	if fromVertexDatasetName != nil {
+		InternalSetValueByPath(toObject, []string{"vertexMultimodalDatasetSource", "datasetName"}, fromVertexDatasetName)
+	}
+
 	if InternalGetValueByPath(fromObject, []string{"fileName"}) != nil {
 		return nil, fmt.Errorf("fileName parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
 	}
 
 	if InternalGetValueByPath(fromObject, []string{"inlinedRequests"}) != nil {
 		return nil, fmt.Errorf("inlinedRequests parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
-	}
-
-	fromVertexDatasetName := InternalGetValueByPath(fromObject, []string{"vertexDatasetName"})
-	if fromVertexDatasetName != nil {
-		InternalSetValueByPath(toObject, []string{"vertexMultimodalDatasetSource", "datasetName"}, fromVertexDatasetName)
 	}
 
 	return toObject, nil

@@ -221,6 +221,11 @@ func computeTokensResponseFromVertex(fromObject map[string]any, parentObject map
 func computerUseToVertex(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
 
+	fromEnablePromptInjectionDetection := InternalGetValueByPath(fromObject, []string{"enablePromptInjectionDetection"})
+	if fromEnablePromptInjectionDetection != nil {
+		InternalSetValueByPath(toObject, []string{"enablePromptInjectionDetection"}, fromEnablePromptInjectionDetection)
+	}
+
 	fromEnvironment := InternalGetValueByPath(fromObject, []string{"environment"})
 	if fromEnvironment != nil {
 		InternalSetValueByPath(toObject, []string{"environment"}, fromEnvironment)
@@ -229,11 +234,6 @@ func computerUseToVertex(fromObject map[string]any, parentObject map[string]any,
 	fromExcludedPredefinedFunctions := InternalGetValueByPath(fromObject, []string{"excludedPredefinedFunctions"})
 	if fromExcludedPredefinedFunctions != nil {
 		InternalSetValueByPath(toObject, []string{"excludedPredefinedFunctions"}, fromExcludedPredefinedFunctions)
-	}
-
-	fromEnablePromptInjectionDetection := InternalGetValueByPath(fromObject, []string{"enablePromptInjectionDetection"})
-	if fromEnablePromptInjectionDetection != nil {
-		InternalSetValueByPath(toObject, []string{"enablePromptInjectionDetection"}, fromEnablePromptInjectionDetection)
 	}
 
 	if InternalGetValueByPath(fromObject, []string{"disabledSafetyPolicies"}) != nil {
@@ -1091,14 +1091,14 @@ func fileDataToMldev(fromObject map[string]any, parentObject map[string]any, roo
 func functionCallToMldev(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
 
-	fromId := InternalGetValueByPath(fromObject, []string{"id"})
-	if fromId != nil {
-		InternalSetValueByPath(toObject, []string{"id"}, fromId)
-	}
-
 	fromArgs := InternalGetValueByPath(fromObject, []string{"args"})
 	if fromArgs != nil {
 		InternalSetValueByPath(toObject, []string{"args"}, fromArgs)
+	}
+
+	fromId := InternalGetValueByPath(fromObject, []string{"id"})
+	if fromId != nil {
+		InternalSetValueByPath(toObject, []string{"id"}, fromId)
 	}
 
 	fromName := InternalGetValueByPath(fromObject, []string{"name"})
@@ -1139,6 +1139,11 @@ func functionCallingConfigToMldev(fromObject map[string]any, parentObject map[st
 
 func generateContentConfigToMldev(ac *InternalAPIClient, fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
+
+	fromServiceTier := InternalGetValueByPath(fromObject, []string{"serviceTier"})
+	if fromServiceTier != nil {
+		InternalSetValueByPath(parentObject, []string{"serviceTier"}, fromServiceTier)
+	}
 
 	fromSystemInstruction := InternalGetValueByPath(fromObject, []string{"systemInstruction"})
 	if fromSystemInstruction != nil {
@@ -1340,16 +1345,16 @@ func generateContentConfigToMldev(ac *InternalAPIClient, fromObject map[string]a
 		return nil, fmt.Errorf("modelArmorConfig parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
-	fromServiceTier := InternalGetValueByPath(fromObject, []string{"serviceTier"})
-	if fromServiceTier != nil {
-		InternalSetValueByPath(parentObject, []string{"serviceTier"}, fromServiceTier)
-	}
-
 	return toObject, nil
 }
 
 func generateContentConfigToVertex(ac *InternalAPIClient, fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
+
+	fromServiceTier := InternalGetValueByPath(fromObject, []string{"serviceTier"})
+	if fromServiceTier != nil {
+		InternalSetValueByPath(parentObject, []string{"serviceTier"}, fromServiceTier)
+	}
 
 	fromSystemInstruction := InternalGetValueByPath(fromObject, []string{"systemInstruction"})
 	if fromSystemInstruction != nil {
@@ -1548,11 +1553,6 @@ func generateContentConfigToVertex(ac *InternalAPIClient, fromObject map[string]
 	fromModelArmorConfig := InternalGetValueByPath(fromObject, []string{"modelArmorConfig"})
 	if fromModelArmorConfig != nil {
 		InternalSetValueByPath(parentObject, []string{"modelArmorConfig"}, fromModelArmorConfig)
-	}
-
-	fromServiceTier := InternalGetValueByPath(fromObject, []string{"serviceTier"})
-	if fromServiceTier != nil {
-		InternalSetValueByPath(parentObject, []string{"serviceTier"}, fromServiceTier)
 	}
 
 	return toObject, nil
@@ -2835,18 +2835,17 @@ func googleMapsToMldev(fromObject map[string]any, parentObject map[string]any, r
 
 func googleSearchToMldev(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
-
-	fromSearchTypes := InternalGetValueByPath(fromObject, []string{"searchTypes"})
-	if fromSearchTypes != nil {
-		InternalSetValueByPath(toObject, []string{"searchTypes"}, fromSearchTypes)
-	}
-
 	if InternalGetValueByPath(fromObject, []string{"blockingConfidence"}) != nil {
 		return nil, fmt.Errorf("blockingConfidence parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
 	if InternalGetValueByPath(fromObject, []string{"excludeDomains"}) != nil {
 		return nil, fmt.Errorf("excludeDomains parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
+	}
+
+	fromSearchTypes := InternalGetValueByPath(fromObject, []string{"searchTypes"})
+	if fromSearchTypes != nil {
+		InternalSetValueByPath(toObject, []string{"searchTypes"}, fromSearchTypes)
 	}
 
 	fromTimeRangeFilter := InternalGetValueByPath(fromObject, []string{"timeRangeFilter"})
@@ -2874,10 +2873,6 @@ func imageConfigToMldev(fromObject map[string]any, parentObject map[string]any, 
 		return nil, fmt.Errorf("personGeneration parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
-	if InternalGetValueByPath(fromObject, []string{"prominentPeople"}) != nil {
-		return nil, fmt.Errorf("prominentPeople parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
-	}
-
 	if InternalGetValueByPath(fromObject, []string{"outputMimeType"}) != nil {
 		return nil, fmt.Errorf("outputMimeType parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
@@ -2888,6 +2883,10 @@ func imageConfigToMldev(fromObject map[string]any, parentObject map[string]any, 
 
 	if InternalGetValueByPath(fromObject, []string{"imageOutputOptions"}) != nil {
 		return nil, fmt.Errorf("imageOutputOptions parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
+	}
+
+	if InternalGetValueByPath(fromObject, []string{"prominentPeople"}) != nil {
+		return nil, fmt.Errorf("prominentPeople parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
 	return toObject, nil
@@ -2911,11 +2910,6 @@ func imageConfigToVertex(fromObject map[string]any, parentObject map[string]any,
 		InternalSetValueByPath(toObject, []string{"personGeneration"}, fromPersonGeneration)
 	}
 
-	fromProminentPeople := InternalGetValueByPath(fromObject, []string{"prominentPeople"})
-	if fromProminentPeople != nil {
-		InternalSetValueByPath(toObject, []string{"prominentPeople"}, fromProminentPeople)
-	}
-
 	fromOutputMimeType := InternalGetValueByPath(fromObject, []string{"outputMimeType"})
 	if fromOutputMimeType != nil {
 		InternalSetValueByPath(toObject, []string{"imageOutputOptions", "mimeType"}, fromOutputMimeType)
@@ -2929,6 +2923,11 @@ func imageConfigToVertex(fromObject map[string]any, parentObject map[string]any,
 	fromImageOutputOptions := InternalGetValueByPath(fromObject, []string{"imageOutputOptions"})
 	if fromImageOutputOptions != nil {
 		InternalSetValueByPath(toObject, []string{"imageOutputOptions"}, fromImageOutputOptions)
+	}
+
+	fromProminentPeople := InternalGetValueByPath(fromObject, []string{"prominentPeople"})
+	if fromProminentPeople != nil {
+		InternalSetValueByPath(toObject, []string{"prominentPeople"}, fromProminentPeople)
 	}
 
 	return toObject, nil
@@ -3357,6 +3356,16 @@ func partToMldev(fromObject map[string]any, parentObject map[string]any, rootObj
 		InternalSetValueByPath(toObject, []string{"mediaResolution"}, fromMediaResolution)
 	}
 
+	fromToolCall := InternalGetValueByPath(fromObject, []string{"toolCall"})
+	if fromToolCall != nil {
+		InternalSetValueByPath(toObject, []string{"toolCall"}, fromToolCall)
+	}
+
+	fromToolResponse := InternalGetValueByPath(fromObject, []string{"toolResponse"})
+	if fromToolResponse != nil {
+		InternalSetValueByPath(toObject, []string{"toolResponse"}, fromToolResponse)
+	}
+
 	fromCodeExecutionResult := InternalGetValueByPath(fromObject, []string{"codeExecutionResult"})
 	if fromCodeExecutionResult != nil {
 		InternalSetValueByPath(toObject, []string{"codeExecutionResult"}, fromCodeExecutionResult)
@@ -3422,16 +3431,6 @@ func partToMldev(fromObject map[string]any, parentObject map[string]any, rootObj
 		InternalSetValueByPath(toObject, []string{"videoMetadata"}, fromVideoMetadata)
 	}
 
-	fromToolCall := InternalGetValueByPath(fromObject, []string{"toolCall"})
-	if fromToolCall != nil {
-		InternalSetValueByPath(toObject, []string{"toolCall"}, fromToolCall)
-	}
-
-	fromToolResponse := InternalGetValueByPath(fromObject, []string{"toolResponse"})
-	if fromToolResponse != nil {
-		InternalSetValueByPath(toObject, []string{"toolResponse"}, fromToolResponse)
-	}
-
 	fromPartMetadata := InternalGetValueByPath(fromObject, []string{"partMetadata"})
 	if fromPartMetadata != nil {
 		InternalSetValueByPath(toObject, []string{"partMetadata"}, fromPartMetadata)
@@ -3446,6 +3445,14 @@ func partToVertex(fromObject map[string]any, parentObject map[string]any, rootOb
 	fromMediaResolution := InternalGetValueByPath(fromObject, []string{"mediaResolution"})
 	if fromMediaResolution != nil {
 		InternalSetValueByPath(toObject, []string{"mediaResolution"}, fromMediaResolution)
+	}
+
+	if InternalGetValueByPath(fromObject, []string{"toolCall"}) != nil {
+		return nil, fmt.Errorf("toolCall parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
+	}
+
+	if InternalGetValueByPath(fromObject, []string{"toolResponse"}) != nil {
+		return nil, fmt.Errorf("toolResponse parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
 	}
 
 	fromCodeExecutionResult := InternalGetValueByPath(fromObject, []string{"codeExecutionResult"})
@@ -3506,14 +3513,6 @@ func partToVertex(fromObject map[string]any, parentObject map[string]any, rootOb
 	fromVideoMetadata := InternalGetValueByPath(fromObject, []string{"videoMetadata"})
 	if fromVideoMetadata != nil {
 		InternalSetValueByPath(toObject, []string{"videoMetadata"}, fromVideoMetadata)
-	}
-
-	if InternalGetValueByPath(fromObject, []string{"toolCall"}) != nil {
-		return nil, fmt.Errorf("toolCall parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
-	}
-
-	if InternalGetValueByPath(fromObject, []string{"toolResponse"}) != nil {
-		return nil, fmt.Errorf("toolResponse parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
 	}
 
 	if InternalGetValueByPath(fromObject, []string{"partMetadata"}) != nil {
@@ -3931,11 +3930,6 @@ func segmentImageSourceToVertex(fromObject map[string]any, parentObject map[stri
 func toolConfigToMldev(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
 
-	fromRetrievalConfig := InternalGetValueByPath(fromObject, []string{"retrievalConfig"})
-	if fromRetrievalConfig != nil {
-		InternalSetValueByPath(toObject, []string{"retrievalConfig"}, fromRetrievalConfig)
-	}
-
 	fromFunctionCallingConfig := InternalGetValueByPath(fromObject, []string{"functionCallingConfig"})
 	if fromFunctionCallingConfig != nil {
 		fromFunctionCallingConfig, err = functionCallingConfigToMldev(fromFunctionCallingConfig.(map[string]any), toObject, rootObject)
@@ -3944,6 +3938,11 @@ func toolConfigToMldev(fromObject map[string]any, parentObject map[string]any, r
 		}
 
 		InternalSetValueByPath(toObject, []string{"functionCallingConfig"}, fromFunctionCallingConfig)
+	}
+
+	fromRetrievalConfig := InternalGetValueByPath(fromObject, []string{"retrievalConfig"})
+	if fromRetrievalConfig != nil {
+		InternalSetValueByPath(toObject, []string{"retrievalConfig"}, fromRetrievalConfig)
 	}
 
 	fromIncludeServerSideToolInvocations := InternalGetValueByPath(fromObject, []string{"includeServerSideToolInvocations"})
@@ -3957,14 +3956,14 @@ func toolConfigToMldev(fromObject map[string]any, parentObject map[string]any, r
 func toolConfigToVertex(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
 
-	fromRetrievalConfig := InternalGetValueByPath(fromObject, []string{"retrievalConfig"})
-	if fromRetrievalConfig != nil {
-		InternalSetValueByPath(toObject, []string{"retrievalConfig"}, fromRetrievalConfig)
-	}
-
 	fromFunctionCallingConfig := InternalGetValueByPath(fromObject, []string{"functionCallingConfig"})
 	if fromFunctionCallingConfig != nil {
 		InternalSetValueByPath(toObject, []string{"functionCallingConfig"}, fromFunctionCallingConfig)
+	}
+
+	fromRetrievalConfig := InternalGetValueByPath(fromObject, []string{"retrievalConfig"})
+	if fromRetrievalConfig != nil {
+		InternalSetValueByPath(toObject, []string{"retrievalConfig"}, fromRetrievalConfig)
 	}
 
 	if InternalGetValueByPath(fromObject, []string{"includeServerSideToolInvocations"}) != nil {
@@ -3980,26 +3979,6 @@ func toolToMldev(fromObject map[string]any, parentObject map[string]any, rootObj
 		return nil, fmt.Errorf("retrieval parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
-	fromComputerUse := InternalGetValueByPath(fromObject, []string{"computerUse"})
-	if fromComputerUse != nil {
-		InternalSetValueByPath(toObject, []string{"computerUse"}, fromComputerUse)
-	}
-
-	fromFileSearch := InternalGetValueByPath(fromObject, []string{"fileSearch"})
-	if fromFileSearch != nil {
-		InternalSetValueByPath(toObject, []string{"fileSearch"}, fromFileSearch)
-	}
-
-	fromGoogleSearch := InternalGetValueByPath(fromObject, []string{"googleSearch"})
-	if fromGoogleSearch != nil {
-		fromGoogleSearch, err = googleSearchToMldev(fromGoogleSearch.(map[string]any), toObject, rootObject)
-		if err != nil {
-			return nil, err
-		}
-
-		InternalSetValueByPath(toObject, []string{"googleSearch"}, fromGoogleSearch)
-	}
-
 	fromGoogleMaps := InternalGetValueByPath(fromObject, []string{"googleMaps"})
 	if fromGoogleMaps != nil {
 		fromGoogleMaps, err = googleMapsToMldev(fromGoogleMaps.(map[string]any), toObject, rootObject)
@@ -4010,9 +3989,19 @@ func toolToMldev(fromObject map[string]any, parentObject map[string]any, rootObj
 		InternalSetValueByPath(toObject, []string{"googleMaps"}, fromGoogleMaps)
 	}
 
+	fromMcpServers := InternalGetValueByPath(fromObject, []string{"mcpServers"})
+	if fromMcpServers != nil {
+		InternalSetValueByPath(toObject, []string{"mcpServers"}, fromMcpServers)
+	}
+
 	fromCodeExecution := InternalGetValueByPath(fromObject, []string{"codeExecution"})
 	if fromCodeExecution != nil {
 		InternalSetValueByPath(toObject, []string{"codeExecution"}, fromCodeExecution)
+	}
+
+	fromComputerUse := InternalGetValueByPath(fromObject, []string{"computerUse"})
+	if fromComputerUse != nil {
+		InternalSetValueByPath(toObject, []string{"computerUse"}, fromComputerUse)
 	}
 
 	if InternalGetValueByPath(fromObject, []string{"enterpriseWebSearch"}) != nil {
@@ -4022,6 +4011,16 @@ func toolToMldev(fromObject map[string]any, parentObject map[string]any, rootObj
 	fromFunctionDeclarations := InternalGetValueByPath(fromObject, []string{"functionDeclarations"})
 	if fromFunctionDeclarations != nil {
 		InternalSetValueByPath(toObject, []string{"functionDeclarations"}, fromFunctionDeclarations)
+	}
+
+	fromGoogleSearch := InternalGetValueByPath(fromObject, []string{"googleSearch"})
+	if fromGoogleSearch != nil {
+		fromGoogleSearch, err = googleSearchToMldev(fromGoogleSearch.(map[string]any), toObject, rootObject)
+		if err != nil {
+			return nil, err
+		}
+
+		InternalSetValueByPath(toObject, []string{"googleSearch"}, fromGoogleSearch)
 	}
 
 	fromGoogleSearchRetrieval := InternalGetValueByPath(fromObject, []string{"googleSearchRetrieval"})
@@ -4038,9 +4037,9 @@ func toolToMldev(fromObject map[string]any, parentObject map[string]any, rootObj
 		InternalSetValueByPath(toObject, []string{"urlContext"}, fromUrlContext)
 	}
 
-	fromMcpServers := InternalGetValueByPath(fromObject, []string{"mcpServers"})
-	if fromMcpServers != nil {
-		InternalSetValueByPath(toObject, []string{"mcpServers"}, fromMcpServers)
+	fromFileSearch := InternalGetValueByPath(fromObject, []string{"fileSearch"})
+	if fromFileSearch != nil {
+		InternalSetValueByPath(toObject, []string{"fileSearch"}, fromFileSearch)
 	}
 
 	return toObject, nil
@@ -4054,6 +4053,26 @@ func toolToVertex(fromObject map[string]any, parentObject map[string]any, rootOb
 		InternalSetValueByPath(toObject, []string{"retrieval"}, fromRetrieval)
 	}
 
+	fromGoogleMaps := InternalGetValueByPath(fromObject, []string{"googleMaps"})
+	if fromGoogleMaps != nil {
+		InternalSetValueByPath(toObject, []string{"googleMaps"}, fromGoogleMaps)
+	}
+
+	fromMcpServers := InternalGetValueByPath(fromObject, []string{"mcpServers"})
+	if fromMcpServers != nil {
+		fromMcpServers, err = InternalApplyConverterToSliceWithRoot(fromMcpServers.([]any), mcpServerToVertex, rootObject)
+		if err != nil {
+			return nil, err
+		}
+
+		InternalSetValueByPath(toObject, []string{"mcpServers"}, fromMcpServers)
+	}
+
+	fromCodeExecution := InternalGetValueByPath(fromObject, []string{"codeExecution"})
+	if fromCodeExecution != nil {
+		InternalSetValueByPath(toObject, []string{"codeExecution"}, fromCodeExecution)
+	}
+
 	fromComputerUse := InternalGetValueByPath(fromObject, []string{"computerUse"})
 	if fromComputerUse != nil {
 		fromComputerUse, err = computerUseToVertex(fromComputerUse.(map[string]any), toObject, rootObject)
@@ -4064,25 +4083,6 @@ func toolToVertex(fromObject map[string]any, parentObject map[string]any, rootOb
 		InternalSetValueByPath(toObject, []string{"computerUse"}, fromComputerUse)
 	}
 
-	if InternalGetValueByPath(fromObject, []string{"fileSearch"}) != nil {
-		return nil, fmt.Errorf("fileSearch parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
-	}
-
-	fromGoogleSearch := InternalGetValueByPath(fromObject, []string{"googleSearch"})
-	if fromGoogleSearch != nil {
-		InternalSetValueByPath(toObject, []string{"googleSearch"}, fromGoogleSearch)
-	}
-
-	fromGoogleMaps := InternalGetValueByPath(fromObject, []string{"googleMaps"})
-	if fromGoogleMaps != nil {
-		InternalSetValueByPath(toObject, []string{"googleMaps"}, fromGoogleMaps)
-	}
-
-	fromCodeExecution := InternalGetValueByPath(fromObject, []string{"codeExecution"})
-	if fromCodeExecution != nil {
-		InternalSetValueByPath(toObject, []string{"codeExecution"}, fromCodeExecution)
-	}
-
 	fromEnterpriseWebSearch := InternalGetValueByPath(fromObject, []string{"enterpriseWebSearch"})
 	if fromEnterpriseWebSearch != nil {
 		InternalSetValueByPath(toObject, []string{"enterpriseWebSearch"}, fromEnterpriseWebSearch)
@@ -4091,6 +4091,11 @@ func toolToVertex(fromObject map[string]any, parentObject map[string]any, rootOb
 	fromFunctionDeclarations := InternalGetValueByPath(fromObject, []string{"functionDeclarations"})
 	if fromFunctionDeclarations != nil {
 		InternalSetValueByPath(toObject, []string{"functionDeclarations"}, fromFunctionDeclarations)
+	}
+
+	fromGoogleSearch := InternalGetValueByPath(fromObject, []string{"googleSearch"})
+	if fromGoogleSearch != nil {
+		InternalSetValueByPath(toObject, []string{"googleSearch"}, fromGoogleSearch)
 	}
 
 	fromGoogleSearchRetrieval := InternalGetValueByPath(fromObject, []string{"googleSearchRetrieval"})
@@ -4108,14 +4113,8 @@ func toolToVertex(fromObject map[string]any, parentObject map[string]any, rootOb
 		InternalSetValueByPath(toObject, []string{"urlContext"}, fromUrlContext)
 	}
 
-	fromMcpServers := InternalGetValueByPath(fromObject, []string{"mcpServers"})
-	if fromMcpServers != nil {
-		fromMcpServers, err = InternalApplyConverterToSliceWithRoot(fromMcpServers.([]any), mcpServerToVertex, rootObject)
-		if err != nil {
-			return nil, err
-		}
-
-		InternalSetValueByPath(toObject, []string{"mcpServers"}, fromMcpServers)
+	if InternalGetValueByPath(fromObject, []string{"fileSearch"}) != nil {
+		return nil, fmt.Errorf("fileSearch parameter is only supported in Gemini Developer API mode, not in Gemini Enterprise Agent Platform mode.")
 	}
 
 	return toObject, nil

@@ -403,7 +403,6 @@ func inferTimeout(ctx context.Context, ac *apiClient, requestTimeout *time.Durat
 }
 
 func doRequest(ac *apiClient, req *http.Request) (*http.Response, error) {
-	// Create a new HTTP client and send the request
 	client := ac.clientConfig.HTTPClient
 	resp, err := client.Do(req)
 	if err != nil {

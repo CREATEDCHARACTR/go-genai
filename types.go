@@ -686,6 +686,19 @@ const (
 	PairwiseChoiceTie PairwiseChoice = "TIE"
 )
 
+// The orientation of the video. Defaults to LANDSCAPE. This enum is not supported in
+// Gemini API.
+type VideoOrientation string
+
+const (
+	// Unspecified video orientation. Defaults to landscape.
+	VideoOrientationUnspecified VideoOrientation = "VIDEO_ORIENTATION_UNSPECIFIED"
+	// Landscape orientation (e.g. 16:9, 1280x720).
+	VideoOrientationLandscape VideoOrientation = "LANDSCAPE"
+	// Portrait orientation (e.g. 9:16, 720x1280).
+	VideoOrientationPortrait VideoOrientation = "PORTRAIT"
+)
+
 // The speed of the tuning job. Only supported for Veo 3.0 models. This enum is not
 // supported in Gemini API.
 type TuningSpeed string
@@ -711,19 +724,6 @@ const (
 	TuningTaskT2v TuningTask = "TUNING_TASK_T2V"
 	// Tuning task for reference to video.
 	TuningTaskR2v TuningTask = "TUNING_TASK_R2V"
-)
-
-// The orientation of the video. Defaults to LANDSCAPE. This enum is not supported in
-// Gemini API.
-type VideoOrientation string
-
-const (
-	// Unspecified video orientation. Defaults to landscape.
-	VideoOrientationUnspecified VideoOrientation = "VIDEO_ORIENTATION_UNSPECIFIED"
-	// Landscape orientation (e.g. 16:9, 1280x720).
-	VideoOrientationLandscape VideoOrientation = "LANDSCAPE"
-	// Portrait orientation (e.g. 9:16, 720x1280).
-	VideoOrientationPortrait VideoOrientation = "PORTRAIT"
 )
 
 // Current state of the `Document`. This enum is not supported in Vertex AI.
@@ -1285,12 +1285,12 @@ type PartialArg struct {
 // the FunctionDeclaration.name and a structured JSON object containing the parameters
 // and their values.
 type FunctionCall struct {
-	// Optional. The unique ID of the function call. If populated, the client to execute
-	// the `function_call` and return the response with the matching `id`.
-	ID string `json:"id,omitempty"`
 	// Optional. The function parameters and values in JSON object format. See FunctionDeclaration.parameters
 	// for parameter details.
 	Args map[string]any `json:"args,omitempty"`
+	// Optional. The unique ID of the function call. If populated, the client to execute
+	// the `function_call` and return the response with the matching `id`.
+	ID string `json:"id,omitempty"`
 	// Optional. Required. The name of the function to call. Matches [FunctionDeclaration.Name].
 	Name string `json:"name,omitempty"`
 	// Optional. The partial argument value of the function call. If provided, represents
@@ -1303,11 +1303,22 @@ type FunctionCall struct {
 	WillContinue *bool `json:"willContinue,omitempty"`
 }
 
+// URI based data for function response. This data type is not supported in Gemini API.
+type FunctionResponseFileData struct {
+	// Optional. Display name of the file data. Used to provide a label or filename to distinguish
+	// file datas. This field is only returned in PromptMessage for prompt management. It
+	// is currently used in the Gemini GenerateContent calls only when server side tools
+	// (code_execution, google_search, and url_context) are enabled.
+	DisplayName string `json:"displayName,omitempty"`
+	// Required. URI.
+	FileURI string `json:"fileUri,omitempty"`
+	// Required. The IANA standard MIME type of the source data.
+	MIMEType string `json:"mimeType,omitempty"`
+}
+
 // Raw media bytes for function response. Text should not be sent as raw bytes, use
 // the 'text' field.
 type FunctionResponseBlob struct {
-	// Required. The IANA standard MIME type of the source data.
-	MIMEType string `json:"mimeType,omitempty"`
 	// Required. Raw bytes.
 	Data []byte `json:"data,omitempty"`
 	// Optional. Display name of the blob. Used to provide a label or filename to distinguish
@@ -1316,19 +1327,8 @@ type FunctionResponseBlob struct {
 	// google_search, and url_context) are enabled. This field is not supported in Gemini
 	// API.
 	DisplayName string `json:"displayName,omitempty"`
-}
-
-// URI based data for function response. This data type is not supported in Gemini API.
-type FunctionResponseFileData struct {
-	// Required. URI.
-	FileURI string `json:"fileUri,omitempty"`
 	// Required. The IANA standard MIME type of the source data.
 	MIMEType string `json:"mimeType,omitempty"`
-	// Optional. Display name of the file data. Used to provide a label or filename to distinguish
-	// file datas. This field is only returned in PromptMessage for prompt management. It
-	// is currently used in the Gemini GenerateContent calls only when server side tools
-	// (code_execution, google_search, and url_context) are enabled.
-	DisplayName string `json:"displayName,omitempty"`
 }
 
 // A datatype containing media that is part of a `FunctionResponse` message. A `FunctionResponsePart`
@@ -1337,10 +1337,10 @@ type FunctionResponseFileData struct {
 // must have a fixed IANA MIME type identifying the type and subtype of the media if
 // the `inline_data` field is filled with raw bytes.
 type FunctionResponsePart struct {
-	// Inline media bytes.
-	InlineData *FunctionResponseBlob `json:"inlineData,omitempty"`
 	// URI based data. This field is not supported in Gemini API.
 	FileData *FunctionResponseFileData `json:"fileData,omitempty"`
+	// Inline media bytes.
+	InlineData *FunctionResponseBlob `json:"inlineData,omitempty"`
 }
 
 // NewFunctionResponsePartFromURI builds a FunctionResponsePart from a given file URI and mime type.
@@ -1368,6 +1368,22 @@ func NewFunctionResponsePartFromBytes(data []byte, mimeType string) *FunctionRes
 // to the model. This should contain the result of a `FunctionCall` made based on model
 // prediction.
 type FunctionResponse struct {
+	// Optional. The ID of the function call this response is for. Populated by the client
+	// to match the corresponding function call `id`.
+	ID string `json:"id,omitempty"`
+	// Required. The name of the function to call. Matches FunctionDeclaration.name and
+	// FunctionCall.name.
+	Name string `json:"name,omitempty"`
+	// Optional. Ordered `Parts` that constitute a function response. Parts may have different
+	// IANA MIME types.
+	Parts []*FunctionResponsePart `json:"parts,omitempty"`
+	// Required. The function response in JSON object format. Use "output" key to specify
+	// function output and "error" key to specify error details (if any). If "output" and
+	// "error" keys are not specified, then whole "response" is treated as function output.
+	Response map[string]any `json:"response,omitempty"`
+	// Optional. Specifies how the response should be scheduled in the conversation. Only
+	// applicable to NON_BLOCKING function calls, is ignored otherwise. Defaults to WHEN_IDLE.
+	Scheduling FunctionResponseScheduling `json:"scheduling,omitempty"`
 	// Optional. Signals that function call continues, and more responses will be returned,
 	// turning the function call into a generator. Is only applicable to NON_BLOCKING function
 	// calls, is ignored otherwise. If set to false, future responses will not be considered.
@@ -1376,22 +1392,6 @@ type FunctionResponse struct {
 	// triggering the generation and finish the function call, additionally set `scheduling`
 	// to `SILENT`. This field is not supported in Vertex AI.
 	WillContinue *bool `json:"willContinue,omitempty"`
-	// Optional. Specifies how the response should be scheduled in the conversation. Only
-	// applicable to NON_BLOCKING function calls, is ignored otherwise. Defaults to WHEN_IDLE.
-	Scheduling FunctionResponseScheduling `json:"scheduling,omitempty"`
-	// Optional. Ordered `Parts` that constitute a function response. Parts may have different
-	// IANA MIME types.
-	Parts []*FunctionResponsePart `json:"parts,omitempty"`
-	// Optional. The ID of the function call this response is for. Populated by the client
-	// to match the corresponding function call `id`.
-	ID string `json:"id,omitempty"`
-	// Required. The name of the function to call. Matches FunctionDeclaration.name and
-	// FunctionCall.name.
-	Name string `json:"name,omitempty"`
-	// Required. The function response in JSON object format. Use "output" key to specify
-	// function output and "error" key to specify error details (if any). If "output" and
-	// "error" keys are not specified, then whole "response" is treated as function output.
-	Response map[string]any `json:"response,omitempty"`
 }
 
 // A content blob. A Blob contains data of a specific media type. It is used to represent
@@ -1483,6 +1483,13 @@ func (c *VideoMetadata) MarshalJSON() ([]byte, error) {
 type Part struct {
 	// Optional. Media resolution for the input media.
 	MediaResolution *PartMediaResolution `json:"mediaResolution,omitempty"`
+	// Optional. Server-side tool call. This field is populated when the model predicts
+	// a tool invocation that should be executed on the server. The client is expected to
+	// echo this message back to the API.
+	ToolCall *ToolCall `json:"toolCall,omitempty"`
+	// Optional. The output from a server-side ToolCall execution. This field is populated
+	// by the client with the results of executing the corresponding ToolCall.
+	ToolResponse *ToolResponse `json:"toolResponse,omitempty"`
 	// Optional. The result of executing the ExecutableCode.
 	CodeExecutionResult *CodeExecutionResult `json:"codeExecutionResult,omitempty"`
 	// Optional. Code generated by the model that is intended to be executed.
@@ -1513,13 +1520,6 @@ type Part struct {
 	// Optional. Video metadata. The metadata should only be specified while the video data
 	// is presented in inline_data or file_data.
 	VideoMetadata *VideoMetadata `json:"videoMetadata,omitempty"`
-	// Optional. Server-side tool call. This field is populated when the model predicts
-	// a tool invocation that should be executed on the server. The client is expected to
-	// echo this message back to the API.
-	ToolCall *ToolCall `json:"toolCall,omitempty"`
-	// Optional. The output from a server-side ToolCall execution. This field is populated
-	// by the client with the results of executing the corresponding ToolCall.
-	ToolResponse *ToolResponse `json:"toolResponse,omitempty"`
 	// Custom metadata associated with the Part. Agents using genai.Part as content representation
 	// may need to keep track of the additional information. For example it can be name
 	// of a file/source from which the Part originates or a way to multiplex multiple Part
@@ -2122,226 +2122,6 @@ type Retrieval struct {
 	VertexRAGStore *VertexRAGStore `json:"vertexRagStore,omitempty"`
 }
 
-// Tool to support computer use.
-type ComputerUse struct {
-	// Required. The environment being operated.
-	Environment Environment `json:"environment,omitempty"`
-	// Optional. By default, [predefined functions](https://cloud.google.com/vertex-ai/generative-ai/docs/computer-use#supported-actions)
-	// are included in the final model call. Some of them can be explicitly excluded from
-	// being automatically included. This can serve two purposes: 1. Using a more restricted
-	// / different action space. 2. Improving the definitions / instructions of predefined
-	// functions.
-	ExcludedPredefinedFunctions []string `json:"excludedPredefinedFunctions,omitempty"`
-	// Optional. Enables the prompt injection detection check on computer-use request.
-	EnablePromptInjectionDetection *bool `json:"enablePromptInjectionDetection,omitempty"`
-	// Optional. Disabled safety policies for computer use. This field is not supported
-	// in Vertex AI.
-	DisabledSafetyPolicies []SafetyPolicy `json:"disabledSafetyPolicies,omitempty"`
-}
-
-// The FileSearch tool that retrieves knowledge from Semantic Retrieval corpora. Files
-// are imported to Semantic Retrieval corpora using the ImportFile API. This data type
-// is not supported in Vertex AI.
-type FileSearch struct {
-	// Required. The names of the file_search_stores to retrieve from. Example: `fileSearchStores/my-file-search-store-123`
-	FileSearchStoreNames []string `json:"fileSearchStoreNames,omitempty"`
-	// Optional. The number of semantic retrieval chunks to retrieve.
-	TopK *int32 `json:"topK,omitempty"`
-	// Optional. Metadata filter to apply to the semantic retrieval documents and chunks.
-	MetadataFilter string `json:"metadataFilter,omitempty"`
-}
-
-// Standard web search for grounding and related configurations. Only text results are
-// returned.
-type WebSearch struct {
-}
-
-// Image search for grounding and related configurations.
-type ImageSearch struct {
-}
-
-// Different types of search that can be enabled on the GoogleSearch tool.
-type SearchTypes struct {
-	// Optional. Setting this field enables web search. Only text results are returned.
-	WebSearch *WebSearch `json:"webSearch,omitempty"`
-	// Optional. Setting this field enables image search. Image bytes are returned.
-	ImageSearch *ImageSearch `json:"imageSearch,omitempty"`
-}
-
-// Represents a time interval, encoded as a Timestamp start (inclusive) and a Timestamp
-// end (exclusive). The start must be less than or equal to the end. When the start
-// equals the end, the interval is empty (matches no time). When both start and end
-// are unspecified, the interval matches any time.
-type Interval struct {
-	// Optional. Exclusive end of the interval. If specified, a Timestamp matching this
-	// interval will have to be before the end.
-	EndTime time.Time `json:"endTime,omitempty"`
-	// Optional. Inclusive start of the interval. If specified, a Timestamp matching this
-	// interval will have to be the same or after the start.
-	StartTime time.Time `json:"startTime,omitempty"`
-}
-
-func (i *Interval) UnmarshalJSON(data []byte) error {
-	type Alias Interval
-	aux := &struct {
-		EndTime   *time.Time `json:"endTime,omitempty"`
-		StartTime *time.Time `json:"startTime,omitempty"`
-		*Alias
-	}{
-		Alias: (*Alias)(i),
-	}
-
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	if !reflect.ValueOf(aux.EndTime).IsZero() {
-		i.EndTime = time.Time(*aux.EndTime)
-	}
-
-	if !reflect.ValueOf(aux.StartTime).IsZero() {
-		i.StartTime = time.Time(*aux.StartTime)
-	}
-
-	return nil
-}
-
-func (i *Interval) MarshalJSON() ([]byte, error) {
-	type Alias Interval
-	aux := &struct {
-		EndTime   *time.Time `json:"endTime,omitempty"`
-		StartTime *time.Time `json:"startTime,omitempty"`
-		*Alias
-	}{
-		Alias: (*Alias)(i),
-	}
-
-	if !reflect.ValueOf(i.EndTime).IsZero() {
-		aux.EndTime = (*time.Time)(&i.EndTime)
-	}
-
-	if !reflect.ValueOf(i.StartTime).IsZero() {
-		aux.StartTime = (*time.Time)(&i.StartTime)
-	}
-
-	return json.Marshal(aux)
-}
-
-// GoogleSearch tool type. Tool to support Google Search in Model. Powered by Google.
-type GoogleSearch struct {
-	// Optional. The set of search types to enable. If not set, web search is enabled by
-	// default.
-	SearchTypes *SearchTypes `json:"searchTypes,omitempty"`
-	// Optional. Sites with confidence level chosen & above this value will be blocked from
-	// the search results. This field is not supported in Gemini API.
-	BlockingConfidence PhishBlockThreshold `json:"blockingConfidence,omitempty"`
-	// Optional. List of domains to be excluded from the search results. The default limit
-	// is 2000 domains. Example: ["amazon.com", "facebook.com"]. This field is not supported
-	// in Gemini API.
-	ExcludeDomains []string `json:"excludeDomains,omitempty"`
-	// Optional. Filter search results to a specific time range. If customers set a start
-	// time, they must set an end time (and vice versa). This field is not supported in
-	// Vertex AI.
-	TimeRangeFilter *Interval `json:"timeRangeFilter,omitempty"`
-}
-
-// Tool that executes code generated by the model, and automatically returns the result
-// to the model. See also ExecutableCode and CodeExecutionResult, which are input and
-// output to this tool. This data type is not supported in Gemini API.
-type ToolCodeExecution struct {
-}
-
-// Tool to search public web data, powered by Vertex AI Search and Sec4 compliance.
-// This data type is not supported in Gemini API.
-type EnterpriseWebSearch struct {
-	// Optional. Sites with confidence level chosen & above this value will be blocked from
-	// the search results.
-	BlockingConfidence PhishBlockThreshold `json:"blockingConfidence,omitempty"`
-	// Optional. List of domains to be excluded from the search results. The default limit
-	// is 2000 domains.
-	ExcludeDomains []string `json:"excludeDomains,omitempty"`
-}
-
-// Structured representation of a function declaration as defined by the [OpenAPI 3.0
-// specification](https://spec.openapis.org/oas/v3.0.3). Included in this declaration
-// are the function name, description, parameters and response type. This FunctionDeclaration
-// is a representation of a block of code that can be used as a `Tool` by the model
-// and executed by the client.
-type FunctionDeclaration struct {
-	// Optional. Description and purpose of the function. Model uses it to decide how and
-	// whether to call the function.
-	Description string `json:"description,omitempty"`
-	// Required. The name of the function to call. Must start with a letter or an underscore.
-	// Must be a-z, A-Z, 0-9, or contain underscores, dots, colons and dashes, with a maximum
-	// length of 128.
-	Name string `json:"name,omitempty"`
-	// Optional. Describes the parameters to this function in JSON Schema Object format.
-	// Reflects the Open API 3.03 Parameter Object. string Key: the name of the parameter.
-	// Parameter names are case sensitive. Schema Value: the Schema defining the type used
-	// for the parameter. For function with no parameters, this can be left unset. Parameter
-	// names must start with a letter or an underscore and must only contain chars a-z,
-	// A-Z, 0-9, or underscores with a maximum length of 64. Example with 1 required and
-	// 1 optional parameter: type: OBJECT properties: param1: type: STRING param2: type:
-	// INTEGER required: - param1
-	Parameters *Schema `json:"parameters,omitempty"`
-	// Optional. Describes the parameters to the function in JSON Schema format. The schema
-	// must describe an object where the properties are the parameters to the function.
-	// For example: ``` { "type": "object", "properties": { "name": { "type": "string" },
-	// "age": { "type": "integer" } }, "additionalProperties": false, "required": ["name",
-	// "age"], "propertyOrdering": ["name", "age"] } ``` This field is mutually exclusive
-	// with `parameters`.
-	ParametersJsonSchema any `json:"parametersJsonSchema,omitempty"`
-	// Optional. Describes the output from this function in JSON Schema format. Reflects
-	// the Open API 3.03 Response Object. The Schema defines the type used for the response
-	// value of the function.
-	Response *Schema `json:"response,omitempty"`
-	// Optional. Describes the output from this function in JSON Schema format. The value
-	// specified by the schema is the response value of the function. This field is mutually
-	// exclusive with `response`.
-	ResponseJsonSchema any `json:"responseJsonSchema,omitempty"`
-	// Optional. Specifies the function Behavior. Currently only non-blocking functions
-	// are supported. If not specified, the system keeps the current function call behavior.
-	// This field is currently only supported by the BidiGenerateContent method.
-	Behavior Behavior `json:"behavior,omitempty"`
-}
-
-// Describes the options to customize dynamic retrieval.
-type DynamicRetrievalConfig struct {
-	// Optional. The threshold to be used in dynamic retrieval. If empty, a system default
-	// value is used.
-	DynamicThreshold *float32 `json:"dynamicThreshold,omitempty"`
-	// The mode of the predictor to be used in dynamic retrieval.
-	Mode DynamicRetrievalConfigMode `json:"mode,omitempty"`
-}
-
-// Tool to retrieve public web data for grounding, powered by Google.
-type GoogleSearchRetrieval struct {
-	// Specifies the dynamic retrieval configuration for the given source.
-	DynamicRetrievalConfig *DynamicRetrievalConfig `json:"dynamicRetrievalConfig,omitempty"`
-}
-
-// ParallelAISearch tool type. A tool that uses the Parallel.ai search engine for grounding.
-// This data type is not supported in Gemini API.
-type ToolParallelAISearch struct {
-	// Optional. The API key for ParallelAISearch. If an API key is not provided, the system
-	// will attempt to verify access by checking for an active Parallel.ai subscription
-	// through the Google Cloud Marketplace. See https://docs.parallel.ai/search/search-quickstart
-	// for more details.
-	APIKey string `json:"apiKey,omitempty"`
-	// Optional. Custom configs for ParallelAISearch. This field can be used to pass any
-	// parameter from the Parallel.ai Search API. See the Parallel.ai documentation for
-	// the full list of available parameters and their usage: https://docs.parallel.ai/api-reference/search-beta/search
-	// Currently only `source_policy`, `excerpts`, `max_results`, `mode`, `fetch_policy`
-	// can be set via this field. For example: { "source_policy": { "include_domains": ["google.com",
-	// "wikipedia.org"], "exclude_domains": ["example.com"] }, "fetch_policy": { "max_age_seconds":
-	// 3600 } }
-	CustomConfigs map[string]any `json:"customConfigs,omitempty"`
-}
-
-// Tool to support URL context.
-type URLContext struct {
-}
-
 // A transport that can stream HTTP requests and responses. Next ID: 6. This data type
 // is not supported in Vertex AI.
 type StreamableHTTPTransport struct {
@@ -2413,26 +2193,242 @@ type MCPServer struct {
 	StreamableHTTPTransport *StreamableHTTPTransport `json:"streamableHttpTransport,omitempty"`
 }
 
+// Tool that executes code generated by the model, and automatically returns the result
+// to the model. See also ExecutableCode and CodeExecutionResult, which are input and
+// output to this tool. This data type is not supported in Gemini API.
+type ToolCodeExecution struct {
+}
+
+// Tool to support computer use.
+type ComputerUse struct {
+	// Optional. Enables the prompt injection detection check on computer-use request.
+	EnablePromptInjectionDetection *bool `json:"enablePromptInjectionDetection,omitempty"`
+	// Required. The environment being operated.
+	Environment Environment `json:"environment,omitempty"`
+	// Optional. By default, [predefined functions](https://cloud.google.com/vertex-ai/generative-ai/docs/computer-use#supported-actions)
+	// are included in the final model call. Some of them can be explicitly excluded from
+	// being automatically included. This can serve two purposes: 1. Using a more restricted
+	// / different action space. 2. Improving the definitions / instructions of predefined
+	// functions.
+	ExcludedPredefinedFunctions []string `json:"excludedPredefinedFunctions,omitempty"`
+	// Optional. Disabled safety policies for computer use. This field is not supported
+	// in Vertex AI.
+	DisabledSafetyPolicies []SafetyPolicy `json:"disabledSafetyPolicies,omitempty"`
+}
+
+// Tool to search public web data, powered by Vertex AI Search and Sec4 compliance.
+// This data type is not supported in Gemini API.
+type EnterpriseWebSearch struct {
+	// Optional. Sites with confidence level chosen & above this value will be blocked from
+	// the search results.
+	BlockingConfidence PhishBlockThreshold `json:"blockingConfidence,omitempty"`
+	// Optional. List of domains to be excluded from the search results. The default limit
+	// is 2000 domains.
+	ExcludeDomains []string `json:"excludeDomains,omitempty"`
+}
+
+// Structured representation of a function declaration as defined by the [OpenAPI 3.0
+// specification](https://spec.openapis.org/oas/v3.0.3). Included in this declaration
+// are the function name, description, parameters and response type. This FunctionDeclaration
+// is a representation of a block of code that can be used as a `Tool` by the model
+// and executed by the client.
+type FunctionDeclaration struct {
+	// Optional. Description and purpose of the function. Model uses it to decide how and
+	// whether to call the function.
+	Description string `json:"description,omitempty"`
+	// Required. The name of the function to call. Must start with a letter or an underscore.
+	// Must be a-z, A-Z, 0-9, or contain underscores, dots, colons and dashes, with a maximum
+	// length of 128.
+	Name string `json:"name,omitempty"`
+	// Optional. Describes the parameters to this function in JSON Schema Object format.
+	// Reflects the Open API 3.03 Parameter Object. string Key: the name of the parameter.
+	// Parameter names are case sensitive. Schema Value: the Schema defining the type used
+	// for the parameter. For function with no parameters, this can be left unset. Parameter
+	// names must start with a letter or an underscore and must only contain chars a-z,
+	// A-Z, 0-9, or underscores with a maximum length of 64. Example with 1 required and
+	// 1 optional parameter: type: OBJECT properties: param1: type: STRING param2: type:
+	// INTEGER required: - param1
+	Parameters *Schema `json:"parameters,omitempty"`
+	// Optional. Describes the parameters to the function in JSON Schema format. The schema
+	// must describe an object where the properties are the parameters to the function.
+	// For example: ``` { "type": "object", "properties": { "name": { "type": "string" },
+	// "age": { "type": "integer" } }, "additionalProperties": false, "required": ["name",
+	// "age"], "propertyOrdering": ["name", "age"] } ``` This field is mutually exclusive
+	// with `parameters`.
+	ParametersJsonSchema any `json:"parametersJsonSchema,omitempty"`
+	// Optional. Describes the output from this function in JSON Schema format. Reflects
+	// the Open API 3.03 Response Object. The Schema defines the type used for the response
+	// value of the function.
+	Response *Schema `json:"response,omitempty"`
+	// Optional. Describes the output from this function in JSON Schema format. The value
+	// specified by the schema is the response value of the function. This field is mutually
+	// exclusive with `response`.
+	ResponseJsonSchema any `json:"responseJsonSchema,omitempty"`
+	// Optional. Specifies the function Behavior. Currently only non-blocking functions
+	// are supported. If not specified, the system keeps the current function call behavior.
+	// This field is currently only supported by the BidiGenerateContent method.
+	Behavior Behavior `json:"behavior,omitempty"`
+}
+
+// Image search for grounding and related configurations.
+type ImageSearch struct {
+}
+
+// Standard web search for grounding and related configurations. Only text results are
+// returned.
+type WebSearch struct {
+}
+
+// Different types of search that can be enabled on the GoogleSearch tool.
+type SearchTypes struct {
+	// Optional. Setting this field enables image search. Image bytes are returned.
+	ImageSearch *ImageSearch `json:"imageSearch,omitempty"`
+	// Optional. Setting this field enables web search. Only text results are returned.
+	WebSearch *WebSearch `json:"webSearch,omitempty"`
+}
+
+// Represents a time interval, encoded as a Timestamp start (inclusive) and a Timestamp
+// end (exclusive). The start must be less than or equal to the end. When the start
+// equals the end, the interval is empty (matches no time). When both start and end
+// are unspecified, the interval matches any time.
+type Interval struct {
+	// Optional. Exclusive end of the interval. If specified, a Timestamp matching this
+	// interval will have to be before the end.
+	EndTime time.Time `json:"endTime,omitempty"`
+	// Optional. Inclusive start of the interval. If specified, a Timestamp matching this
+	// interval will have to be the same or after the start.
+	StartTime time.Time `json:"startTime,omitempty"`
+}
+
+func (i *Interval) UnmarshalJSON(data []byte) error {
+	type Alias Interval
+	aux := &struct {
+		EndTime   *time.Time `json:"endTime,omitempty"`
+		StartTime *time.Time `json:"startTime,omitempty"`
+		*Alias
+	}{
+		Alias: (*Alias)(i),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if !reflect.ValueOf(aux.EndTime).IsZero() {
+		i.EndTime = time.Time(*aux.EndTime)
+	}
+
+	if !reflect.ValueOf(aux.StartTime).IsZero() {
+		i.StartTime = time.Time(*aux.StartTime)
+	}
+
+	return nil
+}
+
+func (i *Interval) MarshalJSON() ([]byte, error) {
+	type Alias Interval
+	aux := &struct {
+		EndTime   *time.Time `json:"endTime,omitempty"`
+		StartTime *time.Time `json:"startTime,omitempty"`
+		*Alias
+	}{
+		Alias: (*Alias)(i),
+	}
+
+	if !reflect.ValueOf(i.EndTime).IsZero() {
+		aux.EndTime = (*time.Time)(&i.EndTime)
+	}
+
+	if !reflect.ValueOf(i.StartTime).IsZero() {
+		aux.StartTime = (*time.Time)(&i.StartTime)
+	}
+
+	return json.Marshal(aux)
+}
+
+// GoogleSearch tool type. Tool to support Google Search in Model. Powered by Google.
+type GoogleSearch struct {
+	// Optional. Sites with confidence level chosen & above this value will be blocked from
+	// the search results. This field is not supported in Gemini API.
+	BlockingConfidence PhishBlockThreshold `json:"blockingConfidence,omitempty"`
+	// Optional. List of domains to be excluded from the search results. The default limit
+	// is 2000 domains. Example: ["amazon.com", "facebook.com"]. This field is not supported
+	// in Gemini API.
+	ExcludeDomains []string `json:"excludeDomains,omitempty"`
+	// Optional. The set of search types to enable. If not set, web search is enabled by
+	// default.
+	SearchTypes *SearchTypes `json:"searchTypes,omitempty"`
+	// Optional. Filter search results to a specific time range. If customers set a start
+	// time, they must set an end time (and vice versa). This field is not supported in
+	// Vertex AI.
+	TimeRangeFilter *Interval `json:"timeRangeFilter,omitempty"`
+}
+
+// Describes the options to customize dynamic retrieval.
+type DynamicRetrievalConfig struct {
+	// Optional. The threshold to be used in dynamic retrieval. If empty, a system default
+	// value is used.
+	DynamicThreshold *float32 `json:"dynamicThreshold,omitempty"`
+	// The mode of the predictor to be used in dynamic retrieval.
+	Mode DynamicRetrievalConfigMode `json:"mode,omitempty"`
+}
+
+// Tool to retrieve public web data for grounding, powered by Google.
+type GoogleSearchRetrieval struct {
+	// Specifies the dynamic retrieval configuration for the given source.
+	DynamicRetrievalConfig *DynamicRetrievalConfig `json:"dynamicRetrievalConfig,omitempty"`
+}
+
+// ParallelAISearch tool type. A tool that uses the Parallel.ai search engine for grounding.
+// This data type is not supported in Gemini API.
+type ToolParallelAISearch struct {
+	// Optional. The API key for ParallelAISearch. If an API key is not provided, the system
+	// will attempt to verify access by checking for an active Parallel.ai subscription
+	// through the Google Cloud Marketplace. See https://docs.parallel.ai/search/search-quickstart
+	// for more details.
+	APIKey string `json:"apiKey,omitempty"`
+	// Optional. Custom configs for ParallelAISearch. This field can be used to pass any
+	// parameter from the Parallel.ai Search API. See the Parallel.ai documentation for
+	// the full list of available parameters and their usage: https://docs.parallel.ai/api-reference/search-beta/search
+	// Currently only `source_policy`, `excerpts`, `max_results`, `mode`, `fetch_policy`
+	// can be set via this field. For example: { "source_policy": { "include_domains": ["google.com",
+	// "wikipedia.org"], "exclude_domains": ["example.com"] }, "fetch_policy": { "max_age_seconds":
+	// 3600 } }
+	CustomConfigs map[string]any `json:"customConfigs,omitempty"`
+}
+
+// Tool to support URL context.
+type URLContext struct {
+}
+
+// The FileSearch tool that retrieves knowledge from Semantic Retrieval corpora. Files
+// are imported to Semantic Retrieval corpora using the ImportFile API. This data type
+// is not supported in Vertex AI.
+type FileSearch struct {
+	// Required. The names of the file_search_stores to retrieve from. Example: `fileSearchStores/my-file-search-store-123`
+	FileSearchStoreNames []string `json:"fileSearchStoreNames,omitempty"`
+	// Optional. Metadata filter to apply to the semantic retrieval documents and chunks.
+	MetadataFilter string `json:"metadataFilter,omitempty"`
+	// Optional. The number of semantic retrieval chunks to retrieve.
+	TopK *int32 `json:"topK,omitempty"`
+}
+
 // Tool details of a tool that the model may use to generate a response.
 type Tool struct {
 	// Optional. Retrieval tool type. System will always execute the provided retrieval
 	// tool(s) to get external knowledge to answer the prompt. Retrieval results are presented
 	// to the model for generation. This field is not supported in Gemini API.
 	Retrieval *Retrieval `json:"retrieval,omitempty"`
-	// Optional. Tool to support the model interacting directly with the computer. If enabled,
-	// it automatically populates computer-use specific Function Declarations.
-	ComputerUse *ComputerUse `json:"computerUse,omitempty"`
-	// Optional. FileSearch tool type. Tool to retrieve knowledge from Semantic Retrieval
-	// corpora. This field is not supported in Vertex AI.
-	FileSearch *FileSearch `json:"fileSearch,omitempty"`
-	// Optional. GoogleSearch tool type. Tool to support Google Search in Model. Powered
-	// by Google.
-	GoogleSearch *GoogleSearch `json:"googleSearch,omitempty"`
 	// Optional. Tool that allows grounding the model's response with
 	// geospatial context related to the user's query.
 	GoogleMaps *GoogleMaps `json:"googleMaps,omitempty"`
+	// Optional. MCP Servers to connect to. This field is not supported in Vertex AI.
+	MCPServers []*MCPServer `json:"mcpServers,omitempty"`
 	// Optional. CodeExecution tool type. Enables the model to execute code as part of generation.
 	CodeExecution *ToolCodeExecution `json:"codeExecution,omitempty"`
+	// Optional. Tool to support the model interacting directly with the computer. If enabled,
+	// it automatically populates computer-use specific Function Declarations.
+	ComputerUse *ComputerUse `json:"computerUse,omitempty"`
 	// Optional. Tool to support searching public web data, powered by Vertex AI Search
 	// and Sec4 compliance. This field is not supported in Gemini API.
 	EnterpriseWebSearch *EnterpriseWebSearch `json:"enterpriseWebSearch,omitempty"`
@@ -2443,6 +2439,9 @@ type Tool struct {
 	// generate the final response back to the user. Maximum 512 function declarations can
 	// be provided.
 	FunctionDeclarations []*FunctionDeclaration `json:"functionDeclarations,omitempty"`
+	// Optional. GoogleSearch tool type. Tool to support Google Search in Model. Powered
+	// by Google.
+	GoogleSearch *GoogleSearch `json:"googleSearch,omitempty"`
 	// Optional. Specialized retrieval tool that is powered by Google Search.
 	GoogleSearchRetrieval *GoogleSearchRetrieval `json:"googleSearchRetrieval,omitempty"`
 	// Optional. If specified, Vertex AI will use Parallel.ai to search for information
@@ -2451,8 +2450,9 @@ type Tool struct {
 	ParallelAISearch *ToolParallelAISearch `json:"parallelAiSearch,omitempty"`
 	// Optional. Tool to support URL context retrieval.
 	URLContext *URLContext `json:"urlContext,omitempty"`
-	// Optional. MCP Servers to connect to. This field is not supported in Vertex AI.
-	MCPServers []*MCPServer `json:"mcpServers,omitempty"`
+	// Optional. FileSearch tool type. Tool to retrieve knowledge from Semantic Retrieval
+	// corpora. This field is not supported in Vertex AI.
+	FileSearch *FileSearch `json:"fileSearch,omitempty"`
 }
 
 // The configuration for the replicated voice to use.
@@ -2540,12 +2540,6 @@ type ImageConfig struct {
 	// Optional. Controls the generation of people. Supported values are:
 	// ALLOW_ALL, ALLOW_ADULT, ALLOW_NONE.
 	PersonGeneration string `json:"personGeneration,omitempty"`
-	// Optional. Controls whether prominent people (celebrities) generation is allowed.
-	// If used with personGeneration, personGeneration enum would take precedence. For instance,
-	// if ALLOW_NONE is set, all person generation would be blocked. If this field is unspecified,
-	// the default behavior is to allow prominent people. This field is not supported in
-	// Gemini API.
-	ProminentPeople ProminentPeople `json:"prominentPeople,omitempty"`
 	// Optional. MIME type of the generated image. This field is not
 	// supported in Gemini API.
 	OutputMIMEType string `json:"outputMimeType,omitempty"`
@@ -2555,6 +2549,12 @@ type ImageConfig struct {
 	// Optional. The image output format for generated images. This field is not supported
 	// in Gemini API.
 	ImageOutputOptions *ImageConfigImageOutputOptions `json:"imageOutputOptions,omitempty"`
+	// Optional. Controls whether prominent people (celebrities) generation is allowed.
+	// If used with personGeneration, personGeneration enum would take precedence. For instance,
+	// if ALLOW_NONE is set, all person generation would be blocked. If this field is unspecified,
+	// the default behavior is to allow prominent people. This field is not supported in
+	// Gemini API.
+	ProminentPeople ProminentPeople `json:"prominentPeople,omitempty"`
 }
 
 // The configuration for automated routing. When automated routing is specified, the
@@ -2596,25 +2596,6 @@ type SafetySetting struct {
 	Threshold HarmBlockThreshold `json:"threshold,omitempty"`
 }
 
-// An object that represents a latitude/longitude pair. This is expressed as a pair
-// of doubles to represent degrees latitude and degrees longitude. Unless specified
-// otherwise, this object must conform to the WGS84 standard. Values must be within
-// normalized ranges.
-type LatLng struct {
-	// The latitude in degrees. It must be in the range [-90.0, +90.0].
-	Latitude *float64 `json:"latitude,omitempty"`
-	// The longitude in degrees. It must be in the range [-180.0, +180.0].
-	Longitude *float64 `json:"longitude,omitempty"`
-}
-
-// Retrieval config.
-type RetrievalConfig struct {
-	// The location of the user.
-	LatLng *LatLng `json:"latLng,omitempty"`
-	// The language code of the user.
-	LanguageCode string `json:"languageCode,omitempty"`
-}
-
 // Function calling config.
 type FunctionCallingConfig struct {
 	// Optional. Function names to call. Only set when the Mode is ANY. Function names should
@@ -2629,12 +2610,31 @@ type FunctionCallingConfig struct {
 	StreamFunctionCallArguments *bool `json:"streamFunctionCallArguments,omitempty"`
 }
 
+// An object that represents a latitude/longitude pair. This is expressed as a pair
+// of doubles to represent degrees latitude and degrees longitude. Unless specified
+// otherwise, this object must conform to the WGS84 standard. Values must be within
+// normalized ranges.
+type LatLng struct {
+	// The latitude in degrees. It must be in the range [-90.0, +90.0].
+	Latitude *float64 `json:"latitude,omitempty"`
+	// The longitude in degrees. It must be in the range [-180.0, +180.0].
+	Longitude *float64 `json:"longitude,omitempty"`
+}
+
+// Retrieval config.
+type RetrievalConfig struct {
+	// The language code of the user.
+	LanguageCode string `json:"languageCode,omitempty"`
+	// The location of the user.
+	LatLng *LatLng `json:"latLng,omitempty"`
+}
+
 // Tool config. This config is shared for all tools provided in the request.
 type ToolConfig struct {
-	// Optional. Retrieval config.
-	RetrievalConfig *RetrievalConfig `json:"retrievalConfig,omitempty"`
 	// Optional. Function calling config.
 	FunctionCallingConfig *FunctionCallingConfig `json:"functionCallingConfig,omitempty"`
+	// Optional. Retrieval config.
+	RetrievalConfig *RetrievalConfig `json:"retrievalConfig,omitempty"`
 	// Optional. If true, the API response will include the server-side tool calls and responses
 	// within the `Content` message. This allows clients to observe the server's tool interactions.
 	// This field is not supported in Vertex AI.
@@ -2666,6 +2666,8 @@ type ModelArmorConfig struct {
 type GenerateContentConfig struct {
 	// Optional. Used to override HTTP request options.
 	HTTPOptions *HTTPOptions `json:"httpOptions,omitempty"`
+	// Optional. The service tier to use for the request. For example, ServiceTier.FLEX.
+	ServiceTier ServiceTier `json:"serviceTier,omitempty"`
 	// Optional. Instructions for the model to steer it toward better performance.
 	// For example, "Answer as concisely as possible" or "Don't use technical
 	// terms in your response".
@@ -2781,8 +2783,6 @@ type GenerateContentConfig struct {
 	// Optional. Settings for prompt and response sanitization using the Model Armor
 	// service. If supplied, safety_settings must not be supplied.
 	ModelArmorConfig *ModelArmorConfig `json:"modelArmorConfig,omitempty"`
-	// Optional. The service tier to use for the request. For example, ServiceTier.FLEX.
-	ServiceTier ServiceTier `json:"serviceTier,omitempty"`
 }
 
 func (c GenerateContentConfig) ToGenerationConfig(backend Backend) (*GenerationConfig, error) {
@@ -3008,14 +3008,14 @@ type GroundingChunkMaps struct {
 // contains the URI of the image search result and the URI of the image. This is used
 // to provide the user with a link to the source of the information.
 type GroundingChunkImage struct {
-	// The URI of the image search result page.
-	SourceURI string `json:"sourceUri,omitempty"`
-	// The URI of the image.
-	ImageURI string `json:"imageUri,omitempty"`
-	// The title of the image search result page.
-	Title string `json:"title,omitempty"`
 	// The domain of the image search result page.
 	Domain string `json:"domain,omitempty"`
+	// The URI of the image.
+	ImageURI string `json:"imageUri,omitempty"`
+	// The URI of the image search result page.
+	SourceURI string `json:"sourceUri,omitempty"`
+	// The title of the image search result page.
+	Title string `json:"title,omitempty"`
 }
 
 // Represents where the chunk starts and ends in the document. This data type is not
@@ -3030,14 +3030,14 @@ type RAGChunkPageSpan struct {
 // A RAGChunk includes the content of a chunk of a RAGFile, and associated metadata.
 // This data type is not supported in Gemini API.
 type RAGChunk struct {
-	// If populated, represents where the chunk starts and ends in the document.
-	PageSpan *RAGChunkPageSpan `json:"pageSpan,omitempty"`
-	// The content of the chunk.
-	Text string `json:"text,omitempty"`
 	// The ID of the chunk.
 	ChunkID string `json:"chunkId,omitempty"`
 	// The ID of the file that the chunk belongs to.
 	FileID string `json:"fileId,omitempty"`
+	// If populated, represents where the chunk starts and ends in the document.
+	PageSpan *RAGChunkPageSpan `json:"pageSpan,omitempty"`
+	// The content of the chunk.
+	Text string `json:"text,omitempty"`
 }
 
 // A list of string values. This data type is not supported in Vertex AI.
@@ -3085,13 +3085,13 @@ type GroundingChunkRetrievedContext struct {
 	// Optional. Name of the `FileSearchStore` containing the document. Example: `fileSearchStores/123`.
 	// This field is not supported in Vertex AI.
 	FileSearchStore string `json:"fileSearchStore,omitempty"`
-	// Optional. Page number of the retrieved context, if applicable. This field is not
-	// supported in Vertex AI.
-	PageNumber *int32 `json:"pageNumber,omitempty"`
 	// Optional. The media blob resource name for multimodal file search results. Format:
 	// fileSearchStores/{file_search_store_id}/media/{blob_id}. This field is not supported
 	// in Vertex AI.
 	MediaID string `json:"mediaId,omitempty"`
+	// Optional. Page number of the retrieved context, if applicable. This field is not
+	// supported in Vertex AI.
+	PageNumber *int32 `json:"pageNumber,omitempty"`
 }
 
 // A `Web` chunk is a piece of evidence that comes from a web page. It contains the
@@ -3112,13 +3112,13 @@ type GroundingChunkWeb struct {
 // is enabled, the model returns a `GroundingChunk` that contains a reference to
 // the source of the information.
 type GroundingChunk struct {
-	// A grounding chunk from an image search result. See the `Image` message for details.
-	Image *GroundingChunkImage `json:"image,omitempty"`
 	// Optional. A `Maps` chunk is a piece of evidence that comes from Google Maps.
 	// It contains information about a place, such as its name, address, and
 	// reviews. This is used to provide the user with rich, location-based
 	// information.
 	Maps *GroundingChunkMaps `json:"maps,omitempty"`
+	// A grounding chunk from an image search result. See the `Image` message for details.
+	Image *GroundingChunkImage `json:"image,omitempty"`
 	// A grounding chunk from a data source retrieved by a retrieval tool, such as Vertex
 	// AI Search. See the `RetrievedContext` message for details
 	RetrievedContext *GroundingChunkRetrievedContext `json:"retrievedContext,omitempty"`
@@ -3193,10 +3193,6 @@ type GroundingMetadataSourceFlaggingURI struct {
 
 // Information for various kinds of grounding.
 type GroundingMetadata struct {
-	// Optional. The image search queries that were used to generate the content. This field
-	// is populated only when the grounding source is Google Search with the Image Search
-	// search_type enabled.
-	ImageSearchQueries []string `json:"imageSearchQueries,omitempty"`
 	// Optional. A list of supporting references retrieved from the grounding
 	// source. This field is populated when the grounding source is Google
 	// Search, Vertex AI Search, or Google Maps.
@@ -3214,6 +3210,10 @@ type GroundingMetadata struct {
 	// the contextual data. This field is populated only when the grounding source is Google
 	// Maps.
 	GoogleMapsWidgetContextToken string `json:"googleMapsWidgetContextToken,omitempty"`
+	// Optional. The image search queries that were used to generate the content. This field
+	// is populated only when the grounding source is Google Search with the Image Search
+	// search_type enabled.
+	ImageSearchQueries []string `json:"imageSearchQueries,omitempty"`
 	// Optional. The queries that were executed by the retrieval tools. This field is populated
 	// only when the grounding source is a retrieval tool, such as Vertex AI Search. This
 	// field is not supported in Gemini API.
@@ -3627,6 +3627,8 @@ func (r *GenerateContentResponse) CodeExecutionResult() string {
 
 // Optional parameters for the EmbedContent method.
 type EmbedContentConfig struct {
+	// Optional. Used to override HTTP request options.
+	HTTPOptions *HTTPOptions `json:"httpOptions,omitempty"`
 	// Type of task for which the embedding will be used.
 	TaskType string `json:"taskType,omitempty"`
 	// Title for the text. Only applicable when TaskType is
@@ -3650,8 +3652,6 @@ type EmbedContentConfig struct {
 	// Gemini Enterprise Agent Platform only. Whether to extract audio from video content.
 	// Only applicable to Gemini Embedding 2 models.
 	AudioTrackExtraction *bool `json:"audioTrackExtraction,omitempty"`
-	// Optional. Used to override HTTP request options.
-	HTTPOptions *HTTPOptions `json:"httpOptions,omitempty"`
 }
 
 // Statistics of the input text associated with the result of content embedding.
@@ -4794,13 +4794,18 @@ type PreferenceOptimizationSpec struct {
 
 // Distillation hyperparameters for tuning.
 type DistillationHyperParameters struct {
-	// Optional. The size of the adapter. Can be 'small', 'medium', or 'large'.
-	AdapterSize AdapterSize `json:"adapterSize,omitempty"`
 	// Optional. Number of complete passes the model makes over the entire training dataset
 	// during training.
 	EpochCount int64 `json:"epochCount,omitempty,string"`
 	// Optional. Multiplier for adjusting the default learning rate.
 	LearningRateMultiplier float32 `json:"learningRateMultiplier,omitempty"`
+	// Optional. The size of the adapter. Can be 'small', 'medium', or 'large'.
+	AdapterSize AdapterSize `json:"adapterSize,omitempty"`
+	// Optional. Batch size for tuning. This feature is only available for open
+	// source models.
+	BatchSize int32 `json:"batchSize,omitempty"`
+	// Optional. The learning rate for distillation tuning.
+	LearningRate float32 `json:"learningRate,omitempty"`
 	// Optional. Generation config for Distillation teacher model sampling. Only the
 	// following fields are supported for distillation teacher samplings:
 	//   - temperature
@@ -4809,36 +4814,28 @@ type DistillationHyperParameters struct {
 	//   - candidate_count
 	//   - thinking_config
 	GenerationConfig *GenerationConfig `json:"generationConfig,omitempty"`
-	// Optional. The learning rate for distillation tuning.
-	LearningRate float32 `json:"learningRate,omitempty"`
-	// Optional. Batch size for tuning. This feature is only available for open
-	// source models.
-	BatchSize int32 `json:"batchSize,omitempty"`
 }
 
 // Distillation sampling spec for tuning.
 type DistillationSamplingSpec struct {
+	// Cloud Storage path to file containing prompt dataset for distillation.
+	// The dataset must be formatted as a JSONL file.
+	PromptDatasetURI string `json:"promptDatasetUri,omitempty"`
+	// Cloud Storage path to file containing validation dataset for distillation.
+	// The dataset must be formatted as a JSONL file.
+	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 	// Optional. The base teacher model that is being distilled. See [Supported
 	// models](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/tuning#supported_models).
 	BaseTeacherModel string `json:"baseTeacherModel,omitempty"`
 	// Optional. The resource name of the Tuned teacher model. Format:
 	// `projects/{project}/locations/{location}/models/{model}`.
 	TunedTeacherModelSource string `json:"tunedTeacherModelSource,omitempty"`
-	// Cloud Storage path to file containing validation dataset for distillation.
-	// The dataset must be formatted as a JSONL file.
-	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
-	// Cloud Storage path to file containing prompt dataset for distillation.
-	// The dataset must be formatted as a JSONL file.
-	PromptDatasetURI string `json:"promptDatasetUri,omitempty"`
 	// Optional. Hyperparameters for distillation tuning.
 	Hyperparameters *DistillationHyperParameters `json:"hyperparameters,omitempty"`
 }
 
 // Distillation tuning spec for tuning.
 type DistillationSpec struct {
-	// Optional. Cloud Storage path to file containing prompt dataset for distillation.
-	// The dataset must be formatted as a JSONL file.
-	PromptDatasetURI string `json:"promptDatasetUri,omitempty"`
 	// The base teacher model that is being distilled. See [Supported models](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/tuning#supported_models).
 	BaseTeacherModel string `json:"baseTeacherModel,omitempty"`
 	// Optional. Hyperparameters for Distillation.
@@ -4847,6 +4844,9 @@ type DistillationSpec struct {
 	// directory of the distillation pipeline. It is used by the system to generate the
 	// paths of output artifacts.
 	PipelineRootDirectory string `json:"pipelineRootDirectory,omitempty"`
+	// Optional. Cloud Storage path to file containing prompt dataset for distillation.
+	// The dataset must be formatted as a JSONL file.
+	PromptDatasetURI string `json:"promptDatasetUri,omitempty"`
 	// The student model that is being tuned, e.g., "google/gemma-2b-1.1-it". Deprecated.
 	// Use base_model instead.
 	StudentModel string `json:"studentModel,omitempty"`
@@ -4855,12 +4855,12 @@ type DistillationSpec struct {
 	TrainingDatasetURI string `json:"trainingDatasetUri,omitempty"`
 	// The resource name of the Tuned teacher model. Format: `projects/{project}/locations/{location}/models/{model}`.
 	TunedTeacherModelSource string `json:"tunedTeacherModelSource,omitempty"`
-	// Optional. Cloud Storage path to file containing validation dataset for tuning. The
-	// dataset must be formatted as a JSONL file.
-	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 	// Optional. Specifies the tuning mode for distillation (sft part). This feature is
 	// only available for open source models.
 	TuningMode TuningMode `json:"tuningMode,omitempty"`
+	// Optional. Cloud Storage path to file containing validation dataset for tuning. The
+	// dataset must be formatted as a JSONL file.
+	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 }
 
 // Autorater config used for evaluation.
@@ -5038,6 +5038,8 @@ type ReinforcementTuningHyperParameters struct {
 // Reinforcement tuning spec for tuning.
 type ReinforcementTuningSpec struct {
 	CompositeRewardConfig *CompositeReinforcementTuningRewardConfig `json:"compositeRewardConfig,omitempty"`
+	// Optional. Single reward function configuration for reinforcement tuning.
+	SingleRewardConfig *SingleReinforcementTuningRewardConfig `json:"singleRewardConfig,omitempty"`
 	// Optional. Cloud Storage path to file containing training dataset for tuning. The
 	// dataset must be formatted as a JSONL file.
 	TrainingDatasetURI string `json:"trainingDatasetUri,omitempty"`
@@ -5048,8 +5050,6 @@ type ReinforcementTuningSpec struct {
 	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 	// Optional. Additional hyper-parameters to use during tuning.
 	HyperParameters *ReinforcementTuningHyperParameters `json:"hyperParameters,omitempty"`
-	// Optional. Single reward function configuration for reinforcement tuning.
-	SingleRewardConfig *SingleReinforcementTuningRewardConfig `json:"singleRewardConfig,omitempty"`
 }
 
 // The `Status` type defines a logical error model that is suitable for different programming
@@ -5558,45 +5558,31 @@ type FullFineTuningSpec struct {
 	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 }
 
-// Hyperparameters for Veo. This data type is not supported in Gemini API.
-type VeoHyperParameters struct {
-	// Optional. Number of complete passes the model makes over the entire training dataset
-	// during training.
-	EpochCount int64 `json:"epochCount,omitempty,string"`
-	// Optional. Multiplier for adjusting the default learning rate.
-	LearningRateMultiplier float64 `json:"learningRateMultiplier,omitempty"`
-	// The tuning task for Veo.
-	TuningTask TuningTask `json:"tuningTask,omitempty"`
-	// Optional. The ratio of Google internal dataset to use in the training mixture, in
-	// range of `[0, 1)`. If `0.2`, it means 20% of Google internal dataset and 80% of user
-	// dataset will be used for training. If not set, the default value is 0.1.
-	VeoDataMixtureRatio float64 `json:"veoDataMixtureRatio,omitempty"`
-	// Optional. The adapter size for LoRA tuning.
-	AdapterSize AdapterSize `json:"adapterSize,omitempty"`
-	// The speed of the tuning job. Only supported for Veo 3.0 models.
-	TuningSpeed TuningSpeed `json:"tuningSpeed,omitempty"`
-}
-
-// Tuning Spec for Veo Model Tuning. This data type is not supported in Gemini API.
-type VeoTuningSpec struct {
-	// Optional. Hyperparameters for Veo.
-	HyperParameters *VeoHyperParameters `json:"hyperParameters,omitempty"`
-	// Required. Training dataset used for tuning. The dataset can be specified as either
-	// a Cloud Storage path to a JSONL file or as the resource name of a Vertex Multimodal
-	// Dataset.
-	TrainingDatasetURI string `json:"trainingDatasetUri,omitempty"`
-	// Optional. Validation dataset used for tuning. The dataset can be specified as either
-	// a Cloud Storage path to a JSONL file or as the resource name of a Vertex Multimodal
-	// Dataset.
-	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
-}
-
 // Tuning job metadata. This data type is not supported in Gemini API.
 type TuningJobMetadata struct {
 	// Output only. The number of epochs that have been completed.
 	CompletedEpochCount int64 `json:"completedEpochCount,omitempty,string"`
 	// Output only. The number of steps that have been completed. Set for Multi-Step RL.
 	CompletedStepCount int64 `json:"completedStepCount,omitempty,string"`
+}
+
+// Hyperparameters for Veo. This data type is not supported in Gemini API.
+type VeoHyperParameters struct {
+	// Optional. The adapter size for LoRA tuning.
+	AdapterSize AdapterSize `json:"adapterSize,omitempty"`
+	// Optional. Number of complete passes the model makes over the entire training dataset
+	// during training.
+	EpochCount int64 `json:"epochCount,omitempty,string"`
+	// Optional. Multiplier for adjusting the default learning rate.
+	LearningRateMultiplier float64 `json:"learningRateMultiplier,omitempty"`
+	// The speed of the tuning job. Only supported for Veo 3.0 models.
+	TuningSpeed TuningSpeed `json:"tuningSpeed,omitempty"`
+	// The tuning task for Veo.
+	TuningTask TuningTask `json:"tuningTask,omitempty"`
+	// Optional. The ratio of Google internal dataset to use in the training mixture, in
+	// range of `[0, 1)`. If `0.2`, it means 20% of Google internal dataset and 80% of user
+	// dataset will be used for training. If not set, the default value is 0.1.
+	VeoDataMixtureRatio float64 `json:"veoDataMixtureRatio,omitempty"`
 }
 
 // Tuning Spec for Veo LoRA Model Tuning. This data type is not supported in Gemini
@@ -5614,6 +5600,20 @@ type VeoLoraTuningSpec struct {
 	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 	// Optional. The orientation of the video. Defaults to LANDSCAPE.
 	VideoOrientation VideoOrientation `json:"videoOrientation,omitempty"`
+}
+
+// Tuning Spec for Veo Model Tuning. This data type is not supported in Gemini API.
+type VeoTuningSpec struct {
+	// Optional. Hyperparameters for Veo.
+	HyperParameters *VeoHyperParameters `json:"hyperParameters,omitempty"`
+	// Required. Training dataset used for tuning. The dataset can be specified as either
+	// a Cloud Storage path to a JSONL file or as the resource name of a Vertex Multimodal
+	// Dataset.
+	TrainingDatasetURI string `json:"trainingDatasetUri,omitempty"`
+	// Optional. Validation dataset used for tuning. The dataset can be specified as either
+	// a Cloud Storage path to a JSONL file or as the resource name of a Vertex Multimodal
+	// Dataset.
+	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
 }
 
 // A tuning job.
@@ -5648,6 +5648,8 @@ type TuningJob struct {
 	SupervisedTuningSpec *SupervisedTuningSpec `json:"supervisedTuningSpec,omitempty"`
 	// Tuning Spec for Preference Optimization.
 	PreferenceOptimizationSpec *PreferenceOptimizationSpec `json:"preferenceOptimizationSpec,omitempty"`
+
+	DistillationSamplingSpec *DistillationSamplingSpec `json:"distillationSamplingSpec,omitempty"`
 	// Tuning Spec for Distillation.
 	DistillationSpec *DistillationSpec `json:"distillationSpec,omitempty"`
 
@@ -5695,17 +5697,15 @@ type TuningJob struct {
 	// will by default use the same display name as the pre-tuned model. If a new display
 	// name is provided, the tuning job will create a new model instead of a new version.
 	TunedModelDisplayName string `json:"tunedModelDisplayName,omitempty"`
+	// Output only. Tuning Job metadata.
+	TuningJobMetadata *TuningJobMetadata `json:"tuningJobMetadata,omitempty"`
 	// Output only. The detail state of the tuning job (while the overall `JobState` is
 	// running).
 	TuningJobState TuningJobState `json:"tuningJobState,omitempty"`
-	// Tuning Spec for Veo Tuning.
-	VeoTuningSpec *VeoTuningSpec `json:"veoTuningSpec,omitempty"`
-	// Output only. Tuning Job metadata.
-	TuningJobMetadata *TuningJobMetadata `json:"tuningJobMetadata,omitempty"`
 	// Tuning Spec for Veo LoRA Tuning.
 	VeoLoraTuningSpec *VeoLoraTuningSpec `json:"veoLoraTuningSpec,omitempty"`
-
-	DistillationSamplingSpec *DistillationSamplingSpec `json:"distillationSamplingSpec,omitempty"`
+	// Tuning Spec for Veo Tuning.
+	VeoTuningSpec *VeoTuningSpec `json:"veoTuningSpec,omitempty"`
 }
 
 func (t *TuningJob) UnmarshalJSON(data []byte) error {
@@ -5897,10 +5897,6 @@ type CreateTuningJobConfig struct {
 	SftLossWeightMultiplier *float32 `json:"sftLossWeightMultiplier,omitempty"`
 	// Optional. The Google Cloud Storage location where the tuning job outputs are written.
 	OutputURI string `json:"outputUri,omitempty"`
-	// Optional. The encryption spec of the tuning job. Customer-managed encryption key
-	// options for a TuningJob. If this is set, then all resources created by the TuningJob
-	// will be encrypted with provided encryption key.
-	EncryptionSpec *EncryptionSpec `json:"encryptionSpec,omitempty"`
 	// Optional. Reward function configuration for reinforcement tuning. Reinforcement tuning
 	// only.
 	RewardConfig *SingleReinforcementTuningRewardConfig `json:"rewardConfig,omitempty"`
@@ -5927,6 +5923,10 @@ type CreateTuningJobConfig struct {
 	// by default the API splits 25% of the training dataset or 50 examples, whichever is
 	// larger, as the validation dataset. Reinforcement tuning only.
 	ValidationDatasetURI string `json:"validationDatasetUri,omitempty"`
+	// Optional. The encryption spec of the tuning job. Customer-managed encryption key
+	// options for a TuningJob. If this is set, then all resources created by the TuningJob
+	// will be encrypted with provided encryption key.
+	EncryptionSpec *EncryptionSpec `json:"encryptionSpec,omitempty"`
 }
 
 // A long-running operation.
@@ -6279,27 +6279,27 @@ type CustomMetadata struct {
 
 // A Document is a collection of Chunks.
 type Document struct {
+	// Output only. The Timestamp of when the `Document` was created.
+	CreateTime time.Time `json:"createTime,omitempty"`
+	// Optional. User provided custom metadata stored as key-value pairs used for querying.
+	// A `Document` can have a maximum of 20 `CustomMetadata`.
+	CustomMetadata []*CustomMetadata `json:"customMetadata,omitempty"`
+	// Optional. The human-readable display name for the `Document`. The display name must
+	// be no more than 512 characters in length, including spaces. Example: "Semantic Retriever
+	// Documentation".
+	DisplayName string `json:"displayName,omitempty"`
+	// Output only. The MIME type of the Document.
+	MIMEType string `json:"mimeType,omitempty"`
 	// Immutable. Identifier. The `Document` resource name. The ID (name excluding the "fileSearchStores/&#42;/documents/"
 	// prefix) can contain up to 40 characters that are lowercase alphanumeric or dashes
 	// (-). The ID cannot start or end with a dash. If the name is empty on create, a unique
 	// name will be derived from `display_name` along with a 12 character random suffix.
 	// Example: `fileSearchStores/{file_search_store_id}/documents/my-awesome-doc-123a456b789c`
 	Name string `json:"name,omitempty"`
-	// Optional. The human-readable display name for the `Document`. The display name must
-	// be no more than 512 characters in length, including spaces. Example: "Semantic Retriever
-	// Documentation".
-	DisplayName string `json:"displayName,omitempty"`
-	// Output only. Current state of the `Document`.
-	State DocumentState `json:"state,omitempty"`
 	// Output only. The size of raw bytes ingested into the Document.
 	SizeBytes int64 `json:"sizeBytes,omitempty,string"`
-	// Output only. The MIME type of the Document.
-	MIMEType string `json:"mimeType,omitempty"`
-	// Output only. The Timestamp of when the `Document` was created.
-	CreateTime time.Time `json:"createTime,omitempty"`
-	// Optional. User provided custom metadata stored as key-value pairs used for querying.
-	// A `Document` can have a maximum of 20 `CustomMetadata`.
-	CustomMetadata []*CustomMetadata `json:"customMetadata,omitempty"`
+	// Output only. Current state of the `Document`.
+	State DocumentState `json:"state,omitempty"`
 	// Output only. The Timestamp of when the `Document` was last updated.
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 }
@@ -6397,6 +6397,19 @@ type CreateFileSearchStoreConfig struct {
 
 // A collection of Documents.
 type FileSearchStore struct {
+	// Optional. The embedding model used by the FileSearchStore.
+	EmbeddingModel string `json:"embeddingModel,omitempty"`
+	// Output only. The number of documents in the `FileSearchStore` that are active and
+	// ready for retrieval.
+	ActiveDocumentsCount int64 `json:"activeDocumentsCount,omitempty,string"`
+	// Output only. The Timestamp of when the `FileSearchStore` was created.
+	CreateTime time.Time `json:"createTime,omitempty"`
+	// Optional. The human-readable display name for the `FileSearchStore`. The display
+	// name must be no more than 512 characters in length, including spaces. Example: "Docs
+	// on Semantic Retriever".
+	DisplayName string `json:"displayName,omitempty"`
+	// Output only. The number of documents in the `FileSearchStore` that have failed processing.
+	FailedDocumentsCount int64 `json:"failedDocumentsCount,omitempty,string"`
 	// Output only. Immutable. Identifier. The `FileSearchStore` resource name. It is an
 	// ID (name excluding the "fileSearchStores/" prefix) that can contain up to 40 characters
 	// that are lowercase alphanumeric or dashes (-). It is output only. The unique name
@@ -6404,26 +6417,13 @@ type FileSearchStore struct {
 	// `fileSearchStores/my-awesome-file-search-store-123a456b789c` If `display_name` is
 	// not provided, the name will be randomly generated.
 	Name string `json:"name,omitempty"`
-	// Optional. The human-readable display name for the `FileSearchStore`. The display
-	// name must be no more than 512 characters in length, including spaces. Example: "Docs
-	// on Semantic Retriever".
-	DisplayName string `json:"displayName,omitempty"`
-	// Output only. The Timestamp of when the `FileSearchStore` was created.
-	CreateTime time.Time `json:"createTime,omitempty"`
-	// Output only. The Timestamp of when the `FileSearchStore` was last updated.
-	UpdateTime time.Time `json:"updateTime,omitempty"`
-	// Output only. The number of documents in the `FileSearchStore` that are active and
-	// ready for retrieval.
-	ActiveDocumentsCount int64 `json:"activeDocumentsCount,omitempty,string"`
 	// Output only. The number of documents in the `FileSearchStore` that are being processed.
 	PendingDocumentsCount int64 `json:"pendingDocumentsCount,omitempty,string"`
-	// Output only. The number of documents in the `FileSearchStore` that have failed processing.
-	FailedDocumentsCount int64 `json:"failedDocumentsCount,omitempty,string"`
 	// Output only. The size of raw bytes ingested into the `FileSearchStore`. This is the
 	// total size of all the documents in the `FileSearchStore`.
 	SizeBytes int64 `json:"sizeBytes,omitempty,string"`
-	// Optional. The embedding model used by the FileSearchStore.
-	EmbeddingModel string `json:"embeddingModel,omitempty"`
+	// Output only. The Timestamp of when the `FileSearchStore` was last updated.
+	UpdateTime time.Time `json:"updateTime,omitempty"`
 }
 
 func (f *FileSearchStore) UnmarshalJSON(data []byte) error {
@@ -6836,14 +6836,14 @@ type BatchJobSource struct {
 	GCSURI []string `json:"gcsUri,omitempty"`
 	// Optional. The BigQuery URI to input table.
 	BigqueryURI string `json:"bigqueryUri,omitempty"`
+	// Optional. This field is experimental and may change in future versions. The Vertex
+	// AI dataset resource name to use as input. Must be of type multimodal.
+	VertexDatasetName string `json:"vertexDatasetName,omitempty"`
 	// Optional. The Gemini Developer API's file resource name of the input data
 	// (e.g. "files/12345").
 	FileName string `json:"fileName,omitempty"`
 	// Optional. The Gemini Developer API's inlined input data to run batch job.
 	InlinedRequests []*InlinedRequest `json:"inlinedRequests,omitempty"`
-	// Optional. This field is experimental and may change in future versions. The Vertex
-	// AI dataset resource name to use as input. Must be of type multimodal.
-	VertexDatasetName string `json:"vertexDatasetName,omitempty"`
 }
 
 // This class is experimental and may change in future versions.
@@ -6904,6 +6904,9 @@ type BatchJobDestination struct {
 	GCSURI string `json:"gcsUri,omitempty"`
 	// Optional. The BigQuery URI to the output table.
 	BigqueryURI string `json:"bigqueryUri,omitempty"`
+	// Optional. This field is experimental and may change in future versions. The Vertex
+	// AI dataset destination.
+	VertexDataset *VertexMultimodalDatasetDestination `json:"vertexDataset,omitempty"`
 	// Optional. The Gemini Developer API's file resource name of the output data
 	// (e.g. "files/12345"). The file will be a JSONL file with a single response
 	// per line. The responses will be GenerateContentResponse messages formatted
@@ -6918,9 +6921,6 @@ type BatchJobDestination struct {
 	// built using inlined requests. The responses will be in the same order as
 	// the input requests.
 	InlinedEmbedContentResponses []*InlinedEmbedContentResponse `json:"inlinedEmbedContentResponses,omitempty"`
-	// Optional. This field is experimental and may change in future versions. The Vertex
-	// AI dataset destination.
-	VertexDataset *VertexMultimodalDatasetDestination `json:"vertexDataset,omitempty"`
 }
 
 // Config for optional parameters.
@@ -6939,15 +6939,15 @@ type CreateBatchJobConfig struct {
 
 // Represents the `output_info` field in batch jobs.
 type BatchJobOutputInfo struct {
-	// This field is experimental and may change in future versions. The Vertex AI dataset
-	// name containing the output data.
-	VertexMultimodalDatasetName string `json:"vertexMultimodalDatasetName,omitempty"`
 	// The full path of the Cloud Storage directory created, into which the prediction output
 	// is written.
 	GCSOutputDirectory string `json:"gcsOutputDirectory,omitempty"`
 	// The name of the BigQuery table created, in `predictions_TIMESTAMP` format, into which
 	// the prediction output is written.
 	BigqueryOutputTable string `json:"bigqueryOutputTable,omitempty"`
+	// This field is experimental and may change in future versions. The Vertex AI dataset
+	// name containing the output data.
+	VertexMultimodalDatasetName string `json:"vertexMultimodalDatasetName,omitempty"`
 }
 
 // Success and error statistics of processing multiple entities (for example, DataItems
@@ -6995,11 +6995,11 @@ type BatchJob struct {
 	Src *BatchJobSource `json:"src,omitempty"`
 	// Configuration for the output data.
 	Dest *BatchJobDestination `json:"dest,omitempty"`
+	// Information further describing the output of this job. Output only.
+	OutputInfo *BatchJobOutputInfo `json:"outputInfo,omitempty"`
 	// Statistics on completed and failed prediction instances. This field is for Gemini
 	// Enterprise Agent Platform only.
 	CompletionStats *CompletionStats `json:"completionStats,omitempty"`
-	// Information further describing the output of this job. Output only.
-	OutputInfo *BatchJobOutputInfo `json:"outputInfo,omitempty"`
 }
 
 func (b *BatchJob) UnmarshalJSON(data []byte) error {
@@ -7501,6 +7501,8 @@ type LiveServerContent struct {
 	// turn which means it doesn’t imply any ordering between transcription and
 	// model turn.
 	InputTranscription *Transcription `json:"inputTranscription,omitempty"`
+	// Optional. Low latency transcription updated while the user is speaking.
+	InterimInputTranscription *Transcription `json:"interimInputTranscription,omitempty"`
 	// Optional. Output transcription. The transcription is independent to the model
 	// turn which means it doesn’t imply any ordering between transcription and
 	// model turn.
@@ -7513,8 +7515,6 @@ type LiveServerContent struct {
 	// it is waiting for more input from the user, e.g. because it expects the
 	// user to continue talking.
 	WaitingForInput bool `json:"waitingForInput,omitempty"`
-	// Optional. Low latency transcription updated while the user is speaking.
-	InterimInputTranscription *Transcription `json:"interimInputTranscription,omitempty"`
 }
 
 // Request for the client to execute the `function_calls` and return the responses with
@@ -7536,33 +7536,33 @@ type LiveServerToolCallCancellation struct {
 
 // Usage metadata about response(s).
 type UsageMetadata struct {
+	// Optional. Total number of tokens across all the generated response candidates.
+	ResponseTokenCount int32 `json:"responseTokenCount,omitempty"`
+	// Optional. List of modalities that were returned in the response.
+	ResponseTokensDetails []*ModalityTokenCount `json:"responseTokensDetails,omitempty"`
+	// Output only. A detailed breakdown of the token count for each modality in the cached
+	// content.
+	CacheTokensDetails []*ModalityTokenCount `json:"cacheTokensDetails,omitempty"`
+	// Output only. The number of tokens in the cached content that was used for this request.
+	CachedContentTokenCount int32 `json:"cachedContentTokenCount,omitempty"`
 	// The total number of tokens in the prompt. This includes any text, images, or other
 	// media provided in the request. When `cached_content` is set, this also includes the
 	// number of tokens in the cached content.
 	PromptTokenCount int32 `json:"promptTokenCount,omitempty"`
-	// Output only. The number of tokens in the cached content that was used for this request.
-	CachedContentTokenCount int32 `json:"cachedContentTokenCount,omitempty"`
-	// Optional. Total number of tokens across all the generated response candidates.
-	ResponseTokenCount int32 `json:"responseTokenCount,omitempty"`
-	// Output only. The number of tokens in the results from tool executions, which are
-	// provided back to the model as input, if applicable.
-	ToolUsePromptTokenCount int32 `json:"toolUsePromptTokenCount,omitempty"`
+	// Output only. A detailed breakdown of the token count for each modality in the prompt.
+	PromptTokensDetails []*ModalityTokenCount `json:"promptTokensDetails,omitempty"`
 	// Output only. The number of tokens that were part of the model's generated "thoughts"
 	// output, if applicable.
 	ThoughtsTokenCount int32 `json:"thoughtsTokenCount,omitempty"`
-	// The total number of tokens for the entire request. This is the sum of `prompt_token_count`,
-	// `candidates_token_count`, `tool_use_prompt_token_count`, and `thoughts_token_count`.
-	TotalTokenCount int32 `json:"totalTokenCount,omitempty"`
-	// Output only. A detailed breakdown of the token count for each modality in the prompt.
-	PromptTokensDetails []*ModalityTokenCount `json:"promptTokensDetails,omitempty"`
-	// Output only. A detailed breakdown of the token count for each modality in the cached
-	// content.
-	CacheTokensDetails []*ModalityTokenCount `json:"cacheTokensDetails,omitempty"`
-	// Optional. List of modalities that were returned in the response.
-	ResponseTokensDetails []*ModalityTokenCount `json:"responseTokensDetails,omitempty"`
+	// Output only. The number of tokens in the results from tool executions, which are
+	// provided back to the model as input, if applicable.
+	ToolUsePromptTokenCount int32 `json:"toolUsePromptTokenCount,omitempty"`
 	// Output only. A detailed breakdown by modality of the token counts from the results
 	// of tool executions, which are provided back to the model as input.
 	ToolUsePromptTokensDetails []*ModalityTokenCount `json:"toolUsePromptTokensDetails,omitempty"`
+	// The total number of tokens for the entire request. This is the sum of `prompt_token_count`,
+	// `candidates_token_count`, `tool_use_prompt_token_count`, and `thoughts_token_count`.
+	TotalTokenCount int32 `json:"totalTokenCount,omitempty"`
 	// Output only. The traffic type for this request. This field is not supported in Gemini
 	// API.
 	TrafficType TrafficType `json:"trafficType,omitempty"`

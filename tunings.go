@@ -150,10 +150,6 @@ func createTuningJobConfigToMldev(fromObject map[string]any, parentObject map[st
 		return nil, fmt.Errorf("outputUri parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
-	if InternalGetValueByPath(fromObject, []string{"encryptionSpec"}) != nil {
-		return nil, fmt.Errorf("encryptionSpec parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
-	}
-
 	if InternalGetValueByPath(fromObject, []string{"rewardConfig"}) != nil {
 		return nil, fmt.Errorf("rewardConfig parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
@@ -184,6 +180,10 @@ func createTuningJobConfigToMldev(fromObject map[string]any, parentObject map[st
 
 	if InternalGetValueByPath(fromObject, []string{"validationDatasetUri"}) != nil {
 		return nil, fmt.Errorf("validationDatasetUri parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
+	}
+
+	if InternalGetValueByPath(fromObject, []string{"encryptionSpec"}) != nil {
+		return nil, fmt.Errorf("encryptionSpec parameter is only supported in Gemini Enterprise Agent Platform mode, not in Gemini Developer API mode.")
 	}
 
 	return toObject, nil
@@ -435,11 +435,6 @@ func createTuningJobConfigToVertex(fromObject map[string]any, parentObject map[s
 		InternalSetValueByPath(parentObject, []string{"outputUri"}, fromOutputUri)
 	}
 
-	fromEncryptionSpec := InternalGetValueByPath(fromObject, []string{"encryptionSpec"})
-	if fromEncryptionSpec != nil {
-		InternalSetValueByPath(parentObject, []string{"encryptionSpec"}, fromEncryptionSpec)
-	}
-
 	fromRewardConfig := InternalGetValueByPath(fromObject, []string{"rewardConfig"})
 	if fromRewardConfig != nil {
 		InternalSetValueByPath(parentObject, []string{"reinforcementTuningSpec", "singleRewardConfig"}, fromRewardConfig)
@@ -478,6 +473,11 @@ func createTuningJobConfigToVertex(fromObject map[string]any, parentObject map[s
 	fromValidationDatasetUri := InternalGetValueByPath(fromObject, []string{"validationDatasetUri"})
 	if fromValidationDatasetUri != nil {
 		InternalSetValueByPath(parentObject, []string{"reinforcementTuningSpec", "validationDatasetUri"}, fromValidationDatasetUri)
+	}
+
+	fromEncryptionSpec := InternalGetValueByPath(fromObject, []string{"encryptionSpec"})
+	if fromEncryptionSpec != nil {
+		InternalSetValueByPath(parentObject, []string{"encryptionSpec"}, fromEncryptionSpec)
 	}
 
 	return toObject, nil
@@ -550,11 +550,6 @@ func createTuningJobParametersPrivateToVertex(fromObject map[string]any, parentO
 func distillationHyperParametersFromVertex(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
 
-	fromAdapterSize := InternalGetValueByPath(fromObject, []string{"adapterSize"})
-	if fromAdapterSize != nil {
-		InternalSetValueByPath(toObject, []string{"adapterSize"}, fromAdapterSize)
-	}
-
 	fromEpochCount := InternalGetValueByPath(fromObject, []string{"epochCount"})
 	if fromEpochCount != nil {
 		InternalSetValueByPath(toObject, []string{"epochCount"}, fromEpochCount)
@@ -563,6 +558,21 @@ func distillationHyperParametersFromVertex(fromObject map[string]any, parentObje
 	fromLearningRateMultiplier := InternalGetValueByPath(fromObject, []string{"learningRateMultiplier"})
 	if fromLearningRateMultiplier != nil {
 		InternalSetValueByPath(toObject, []string{"learningRateMultiplier"}, fromLearningRateMultiplier)
+	}
+
+	fromAdapterSize := InternalGetValueByPath(fromObject, []string{"adapterSize"})
+	if fromAdapterSize != nil {
+		InternalSetValueByPath(toObject, []string{"adapterSize"}, fromAdapterSize)
+	}
+
+	fromBatchSize := InternalGetValueByPath(fromObject, []string{"batchSize"})
+	if fromBatchSize != nil {
+		InternalSetValueByPath(toObject, []string{"batchSize"}, fromBatchSize)
+	}
+
+	fromLearningRate := InternalGetValueByPath(fromObject, []string{"learningRate"})
+	if fromLearningRate != nil {
+		InternalSetValueByPath(toObject, []string{"learningRate"}, fromLearningRate)
 	}
 
 	fromGenerationConfig := InternalGetValueByPath(fromObject, []string{"generationConfig"})
@@ -575,21 +585,21 @@ func distillationHyperParametersFromVertex(fromObject map[string]any, parentObje
 		InternalSetValueByPath(toObject, []string{"generationConfig"}, fromGenerationConfig)
 	}
 
-	fromLearningRate := InternalGetValueByPath(fromObject, []string{"learningRate"})
-	if fromLearningRate != nil {
-		InternalSetValueByPath(toObject, []string{"learningRate"}, fromLearningRate)
-	}
-
-	fromBatchSize := InternalGetValueByPath(fromObject, []string{"batchSize"})
-	if fromBatchSize != nil {
-		InternalSetValueByPath(toObject, []string{"batchSize"}, fromBatchSize)
-	}
-
 	return toObject, nil
 }
 
 func distillationSamplingSpecFromVertex(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
+
+	fromPromptDatasetUri := InternalGetValueByPath(fromObject, []string{"promptDatasetUri"})
+	if fromPromptDatasetUri != nil {
+		InternalSetValueByPath(toObject, []string{"promptDatasetUri"}, fromPromptDatasetUri)
+	}
+
+	fromValidationDatasetUri := InternalGetValueByPath(fromObject, []string{"validationDatasetUri"})
+	if fromValidationDatasetUri != nil {
+		InternalSetValueByPath(toObject, []string{"validationDatasetUri"}, fromValidationDatasetUri)
+	}
 
 	fromBaseTeacherModel := InternalGetValueByPath(fromObject, []string{"baseTeacherModel"})
 	if fromBaseTeacherModel != nil {
@@ -599,16 +609,6 @@ func distillationSamplingSpecFromVertex(fromObject map[string]any, parentObject 
 	fromTunedTeacherModelSource := InternalGetValueByPath(fromObject, []string{"tunedTeacherModelSource"})
 	if fromTunedTeacherModelSource != nil {
 		InternalSetValueByPath(toObject, []string{"tunedTeacherModelSource"}, fromTunedTeacherModelSource)
-	}
-
-	fromValidationDatasetUri := InternalGetValueByPath(fromObject, []string{"validationDatasetUri"})
-	if fromValidationDatasetUri != nil {
-		InternalSetValueByPath(toObject, []string{"validationDatasetUri"}, fromValidationDatasetUri)
-	}
-
-	fromPromptDatasetUri := InternalGetValueByPath(fromObject, []string{"promptDatasetUri"})
-	if fromPromptDatasetUri != nil {
-		InternalSetValueByPath(toObject, []string{"promptDatasetUri"}, fromPromptDatasetUri)
 	}
 
 	fromHyperparameters := InternalGetValueByPath(fromObject, []string{"hyperparameters"})
@@ -626,11 +626,6 @@ func distillationSamplingSpecFromVertex(fromObject map[string]any, parentObject 
 
 func distillationSpecFromVertex(fromObject map[string]any, parentObject map[string]any, rootObject map[string]any) (toObject map[string]any, err error) {
 	toObject = make(map[string]any)
-
-	fromPromptDatasetUri := InternalGetValueByPath(fromObject, []string{"promptDatasetUri"})
-	if fromPromptDatasetUri != nil {
-		InternalSetValueByPath(toObject, []string{"promptDatasetUri"}, fromPromptDatasetUri)
-	}
 
 	fromBaseTeacherModel := InternalGetValueByPath(fromObject, []string{"baseTeacherModel"})
 	if fromBaseTeacherModel != nil {
@@ -652,6 +647,11 @@ func distillationSpecFromVertex(fromObject map[string]any, parentObject map[stri
 		InternalSetValueByPath(toObject, []string{"pipelineRootDirectory"}, fromPipelineRootDirectory)
 	}
 
+	fromPromptDatasetUri := InternalGetValueByPath(fromObject, []string{"promptDatasetUri"})
+	if fromPromptDatasetUri != nil {
+		InternalSetValueByPath(toObject, []string{"promptDatasetUri"}, fromPromptDatasetUri)
+	}
+
 	fromStudentModel := InternalGetValueByPath(fromObject, []string{"studentModel"})
 	if fromStudentModel != nil {
 		InternalSetValueByPath(toObject, []string{"studentModel"}, fromStudentModel)
@@ -667,14 +667,14 @@ func distillationSpecFromVertex(fromObject map[string]any, parentObject map[stri
 		InternalSetValueByPath(toObject, []string{"tunedTeacherModelSource"}, fromTunedTeacherModelSource)
 	}
 
-	fromValidationDatasetUri := InternalGetValueByPath(fromObject, []string{"validationDatasetUri"})
-	if fromValidationDatasetUri != nil {
-		InternalSetValueByPath(toObject, []string{"validationDatasetUri"}, fromValidationDatasetUri)
-	}
-
 	fromTuningMode := InternalGetValueByPath(fromObject, []string{"tuningMode"})
 	if fromTuningMode != nil {
 		InternalSetValueByPath(toObject, []string{"tuningMode"}, fromTuningMode)
+	}
+
+	fromValidationDatasetUri := InternalGetValueByPath(fromObject, []string{"validationDatasetUri"})
+	if fromValidationDatasetUri != nil {
+		InternalSetValueByPath(toObject, []string{"validationDatasetUri"}, fromValidationDatasetUri)
 	}
 
 	return toObject, nil
@@ -1150,6 +1150,16 @@ func tuningJobFromVertex(fromObject map[string]any, parentObject map[string]any,
 		InternalSetValueByPath(toObject, []string{"preferenceOptimizationSpec"}, fromPreferenceOptimizationSpec)
 	}
 
+	fromDistillationSamplingSpec := InternalGetValueByPath(fromObject, []string{"distillationSamplingSpec"})
+	if fromDistillationSamplingSpec != nil {
+		fromDistillationSamplingSpec, err = distillationSamplingSpecFromVertex(fromDistillationSamplingSpec.(map[string]any), toObject, rootObject)
+		if err != nil {
+			return nil, err
+		}
+
+		InternalSetValueByPath(toObject, []string{"distillationSamplingSpec"}, fromDistillationSamplingSpec)
+	}
+
 	fromDistillationSpec := InternalGetValueByPath(fromObject, []string{"distillationSpec"})
 	if fromDistillationSpec != nil {
 		fromDistillationSpec, err = distillationSpecFromVertex(fromDistillationSpec.(map[string]any), toObject, rootObject)
@@ -1225,19 +1235,14 @@ func tuningJobFromVertex(fromObject map[string]any, parentObject map[string]any,
 		InternalSetValueByPath(toObject, []string{"tunedModelDisplayName"}, fromTunedModelDisplayName)
 	}
 
-	fromTuningJobState := InternalGetValueByPath(fromObject, []string{"tuningJobState"})
-	if fromTuningJobState != nil {
-		InternalSetValueByPath(toObject, []string{"tuningJobState"}, fromTuningJobState)
-	}
-
-	fromVeoTuningSpec := InternalGetValueByPath(fromObject, []string{"veoTuningSpec"})
-	if fromVeoTuningSpec != nil {
-		InternalSetValueByPath(toObject, []string{"veoTuningSpec"}, fromVeoTuningSpec)
-	}
-
 	fromTuningJobMetadata := InternalGetValueByPath(fromObject, []string{"tuningJobMetadata"})
 	if fromTuningJobMetadata != nil {
 		InternalSetValueByPath(toObject, []string{"tuningJobMetadata"}, fromTuningJobMetadata)
+	}
+
+	fromTuningJobState := InternalGetValueByPath(fromObject, []string{"tuningJobState"})
+	if fromTuningJobState != nil {
+		InternalSetValueByPath(toObject, []string{"tuningJobState"}, fromTuningJobState)
 	}
 
 	fromVeoLoraTuningSpec := InternalGetValueByPath(fromObject, []string{"veoLoraTuningSpec"})
@@ -1245,14 +1250,9 @@ func tuningJobFromVertex(fromObject map[string]any, parentObject map[string]any,
 		InternalSetValueByPath(toObject, []string{"veoLoraTuningSpec"}, fromVeoLoraTuningSpec)
 	}
 
-	fromDistillationSamplingSpec := InternalGetValueByPath(fromObject, []string{"distillationSamplingSpec"})
-	if fromDistillationSamplingSpec != nil {
-		fromDistillationSamplingSpec, err = distillationSamplingSpecFromVertex(fromDistillationSamplingSpec.(map[string]any), toObject, rootObject)
-		if err != nil {
-			return nil, err
-		}
-
-		InternalSetValueByPath(toObject, []string{"distillationSamplingSpec"}, fromDistillationSamplingSpec)
+	fromVeoTuningSpec := InternalGetValueByPath(fromObject, []string{"veoTuningSpec"})
+	if fromVeoTuningSpec != nil {
+		InternalSetValueByPath(toObject, []string{"veoTuningSpec"}, fromVeoTuningSpec)
 	}
 
 	return toObject, nil
